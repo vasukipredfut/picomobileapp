@@ -5,3 +5,4 @@
 [post_model_sync]
 # Patches added in this section will be executed after doctypes are migrated
 custom_theme.patches.setup_sidebar_menu
+custom_theme.patches.setup_company_dashboard
