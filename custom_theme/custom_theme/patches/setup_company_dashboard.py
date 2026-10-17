@@ -40,7 +40,6 @@ WELCOME_BLOCK_NAME = "Pico Dashboard Welcome Banner"
 WELCOME_HTML = """
 <div class="pico-welcome-banner">
 	<div class="pico-welcome-title" id="pico-welcome-title">Welcome</div>
-	<div class="pico-welcome-subtitle">Here's a quick look at your company's numbers</div>
 </div>
 """
 
@@ -48,18 +47,13 @@ WELCOME_STYLE = """
 .pico-welcome-banner {
 	padding: 32px 24px;
 	border-radius: 8px;
-	background: linear-gradient(135deg, var(--primary-color, #2490ef) 0%, #29cd42 100%);
+	background: linear-gradient(135deg, #0b63d6 0%, #2490ef 100%);
 	text-align: center;
 	color: #fff;
 }
 .pico-welcome-title {
 	font-size: 28px;
 	font-weight: 700;
-	margin-bottom: 6px;
-}
-.pico-welcome-subtitle {
-	font-size: 14px;
-	opacity: 0.9;
 }
 """
 
@@ -80,16 +74,19 @@ def execute():
 
 
 def ensure_welcome_block():
+	# Upsert: re-running this after a content/style tweak should update the
+	# existing block in place, not skip it.
 	if frappe.db.exists("Custom HTML Block", WELCOME_BLOCK_NAME):
-		return
+		doc = frappe.get_doc("Custom HTML Block", WELCOME_BLOCK_NAME)
+	else:
+		doc = frappe.new_doc("Custom HTML Block")
+		doc.name = WELCOME_BLOCK_NAME
+		doc.private = 0
 
-	doc = frappe.new_doc("Custom HTML Block")
-	doc.name = WELCOME_BLOCK_NAME
-	doc.private = 0
 	doc.html = WELCOME_HTML
 	doc.style = WELCOME_STYLE
 	doc.script = WELCOME_SCRIPT
-	doc.insert(ignore_permissions=True)
+	doc.save(ignore_permissions=True)
 
 
 def ensure_number_card(card):
