@@ -28,7 +28,10 @@ MODULES = [
 			"Salary Component",
 			"Salary Structure",
 			"Salary Structure Assignment",
-			"Bulk Salary Structure Assignment",
+			# A dict here means "link to this real DocType, but show this
+			# shorter text in the sidebar" — the plain string entries link
+			# to a DocType of that exact name AND display that same name.
+			{"doctype": "Bulk Salary Structure Assignment", "label": "Bulk Sal.Struc Assignment"},
 			"Payroll Entry",
 			"Salary Slip",
 		],
@@ -54,7 +57,15 @@ MODULES = [
 		"title": "Service Module",
 		"icon": "support",
 		"doctypes": [
-			"Installation Note",
+			"Installation Report",
+		],
+	},
+	{
+		"title": "Settings",
+		"icon": "setting",
+		"doctypes": [
+			"Company",
+			"Company Branding",
 		],
 	},
 ]
@@ -63,22 +74,34 @@ MODULES = [
 def execute():
 	for module in MODULES:
 		parent_name = ensure_parent_workspace(module["title"], module["icon"])
-		for idx, doctype in enumerate(module["doctypes"]):
-			ensure_doctype_workspace(parent_name, module["title"], doctype, idx)
+		for idx, entry in enumerate(module["doctypes"]):
+			ensure_doctype_workspace(parent_name, module["title"], entry, idx)
+
+
+def normalize_doctype_entry(entry):
+	"""A plain string links to (and displays) that exact DocType name. A dict
+	{"doctype": ..., "label": ...} links to the real DocType but shows a
+	different label in the sidebar."""
+	if isinstance(entry, dict):
+		return entry["doctype"], entry.get("label", entry["doctype"])
+	return entry, entry
 
 
 def ensure_parent_workspace(title, icon):
+	# Upsert: re-running this after an icon/title tweak should update the
+	# existing workspace in place, not skip it.
 	if frappe.db.exists("Workspace", title):
-		return title
+		doc = frappe.get_doc("Workspace", title)
+	else:
+		doc = frappe.new_doc("Workspace")
+		doc.label = title
+		doc.parent_page = ""
+		doc.sequence_id = next_sequence_id()
 
-	doc = frappe.new_doc("Workspace")
-	doc.label = title
 	doc.title = title
 	doc.public = 1
 	doc.is_hidden = 0
 	doc.icon = icon
-	doc.parent_page = ""
-	doc.sequence_id = next_sequence_id()
 	doc.content = json.dumps(
 		[
 			{
@@ -88,14 +111,16 @@ def ensure_parent_workspace(title, icon):
 			}
 		]
 	)
-	doc.insert(ignore_permissions=True)
+	doc.save(ignore_permissions=True)
 	return doc.name
 
 
-def ensure_doctype_workspace(parent_name, module_title, doctype, idx):
-	label = f"{module_title} - {doctype}"
-	if frappe.db.exists("Workspace", label):
-		return
+def ensure_doctype_workspace(parent_name, module_title, entry, idx):
+	doctype, display_label = normalize_doctype_entry(entry)
+	# The internal name/label stays tied to the real doctype, not the display
+	# text — so changing just the display label later updates this same
+	# record instead of creating an orphaned duplicate.
+	internal_label = f"{module_title} - {doctype}"
 
 	if not frappe.db.exists("DocType", doctype):
 		frappe.log_error(
@@ -106,33 +131,40 @@ def ensure_doctype_workspace(parent_name, module_title, doctype, idx):
 
 	shortcut_id = frappe.generate_hash(length=10)
 
-	doc = frappe.new_doc("Workspace")
-	doc.label = label
-	doc.title = doctype
+	# Upsert: re-running this after a label/order tweak should update the
+	# existing workspace in place, not skip it.
+	if frappe.db.exists("Workspace", internal_label):
+		doc = frappe.get_doc("Workspace", internal_label)
+	else:
+		doc = frappe.new_doc("Workspace")
+		doc.label = internal_label
+		doc.parent_page = parent_name
+
+	doc.title = display_label
 	doc.public = 1
 	doc.is_hidden = 0
-	doc.parent_page = parent_name
 	doc.sequence_id = idx + 1
 	doc.content = json.dumps(
 		[
 			{
 				"id": shortcut_id,
 				"type": "shortcut",
-				"data": {"shortcut_name": doctype, "col": 4},
+				"data": {"shortcut_name": display_label, "col": 4},
 			}
 		]
 	)
+	doc.shortcuts = []
 	doc.append(
 		"shortcuts",
 		{
-			"label": doctype,
+			"label": display_label,
 			"link_to": doctype,
 			"type": "DocType",
 			"doc_view": "List",
 			"color": "Grey",
 		},
 	)
-	doc.insert(ignore_permissions=True)
+	doc.save(ignore_permissions=True)
 
 
 def next_sequence_id():

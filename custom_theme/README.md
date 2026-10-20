@@ -6,9 +6,13 @@ a small doctype + hook pair for per-company branding.
 ## setup_sidebar_menu
 
 Adds a nested sidebar: HR Module, Payroll Module, Expense Module, Sales
-Module, Service Module as top-level entries, each with its doctypes listed
-as children (User, Employee, Leave Application, etc.). Clicking a child goes
-straight to that doctype's list view.
+Module, Service Module, Settings as top-level entries, each with its
+doctypes listed as children (User, Employee, Leave Application, Company,
+Company Branding, etc.). Clicking a child goes straight to that doctype's
+list view. Upserts by internal label (`"{module title} - {doctype}"`), so
+re-running after adding/renaming an entry updates existing Workspace records
+in place instead of creating duplicates; a missing DocType is skipped with a
+logged error rather than failing the whole patch.
 
 ## setup_company_dashboard
 
@@ -108,3 +112,9 @@ frappe.db.commit()
 Both patches check for existing records by name/label before creating
 anything new, so re-running them is safe. Company Branding needs the real
 doctype (step 3 above) — it can't be applied as a standalone console script.
+
+**Updating an already-applied patch:** `[post_model_sync]` patches are
+tracked in Patch Log once run, so `bench migrate` will **not** re-run one
+just because its file content changed — you have to re-run it directly via
+the `bench console` snippets above (safe/idempotent either way), even on a
+bench where `custom_theme` is installed as a real app.
