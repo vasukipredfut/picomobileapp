@@ -53,6 +53,13 @@ unrestricted users (e.g. Guest visitors on the public website).
   `custom_theme/__init__.py` monkeypatches `frappe.boot.get_app_logo` itself
   (the function `boot.py` actually calls) at app-load time, falling back to
   the original function when no company logo is set.
+- `public/css/company_branding.css` (loaded via `app_include_css` +
+  `web_include_css`) — Frappe caps the logo tiny by default
+  (`.app-logo { width: 24px }` in desk, `.navbar-brand img { max-height: 22px }`
+  on the website); this raises both ceilings so an uploaded company logo
+  actually reads as a logo instead of a postage stamp. Favicon size isn't
+  adjustable this way — browsers always render a tab icon tiny regardless of
+  the source image's dimensions.
 
 ## Apply on a server
 
@@ -67,13 +74,15 @@ If `custom_theme` is already installed as an app on the target bench:
    bench, and `custom_theme/custom_theme/utils.py` into
    `apps/custom_theme/custom_theme/utils.py` (merge if that file already has
    other content).
-4. Add the `update_website_context` hook line from
-   `custom_theme/custom_theme/hooks.py` (see the copy here) into the target
-   bench's `apps/custom_theme/custom_theme/hooks.py`.
+4. Add the `update_website_context`, `app_include_css`, and `web_include_css`
+   hook lines from `custom_theme/custom_theme/hooks.py` (see the copy here)
+   into the target bench's `apps/custom_theme/custom_theme/hooks.py`.
 5. Merge the `_patch_desk_app_logo()` function and its call from
    `custom_theme/custom_theme/__init__.py` (see the copy here) into the
    target bench's `apps/custom_theme/custom_theme/__init__.py`.
-6. Run `bench --site <site> migrate` (syncs the patches *and* the new
+6. Copy `custom_theme/custom_theme/public/css/company_branding.css` into
+   `apps/custom_theme/custom_theme/public/css/` on the target bench.
+7. Run `bench --site <site> migrate` (syncs the patches *and* the new
    doctype table in one pass), then restart the bench web process so the new
    hooks and the monkeypatch (it only runs once, at process import) are
    loaded.
