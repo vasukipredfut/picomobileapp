@@ -196,13 +196,10 @@ app_license = "mit"
 
 # Website Context
 # ----------------
-# swap the public website header logo based on the current company's Company Branding
+# swap the website header logo, desk navbar logo (via __init__.py monkeypatch
+# of frappe.boot.get_app_logo), and browser favicon based on the current
+# company's Company Branding
 update_website_context = ["custom_theme.utils.update_website_context"]
-
-# Boot Session
-# ------------
-# swap the desk navbar logo based on the logged-in user's default company
-boot_session = "custom_theme.utils.set_company_logo_in_boot"
 
 # Request Events
 # ----------------

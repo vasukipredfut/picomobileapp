@@ -25,20 +25,34 @@ that collides with Frappe's built-in Dashboard DocType) with:
 ## Company Branding (per-company logo)
 
 A new `Company Branding` doctype (`company` Link, unique + `logo` Attach
-Image — one record per company) plus two hooks that resolve the current
-company (logged-in user's default company via `erpnext.get_default_company()`,
-falling back to Global Defaults) and swap in that company's logo wherever
-`custom_theme` already controls the page:
+Image — one record per company) plus hooks that resolve the current company
+and swap in that company's logo wherever `custom_theme` already controls the
+page. Falls through to the normal Website Settings logo when no
+`Company Branding` record exists for the resolved company, so unbranded
+companies aren't broken. Core `Company` doctype is untouched — this is fully
+additive, living only in `custom_theme`.
 
-- `update_website_context` — swaps the public website header logo
-  (`banner_image`) per visitor's resolved company.
-- `boot_session` — swaps the desk navbar logo (`app_logo_url`) per the
-  logged-in user's resolved company.
+**Company resolution** (`get_current_company()` in `utils.py`): the logged-in
+user's Company via their `User Permission` (`allow=Company`), preferring one
+marked "Is Default" if they have several — **not**
+`erpnext.get_default_company()`, which only reads a separate per-user Default
+value that a Company User Permission does not populate, so it silently stays
+on the site's global default company for a user who's merely restricted to
+one company. Falls back to the site's Global Default Company for
+unrestricted users (e.g. Guest visitors on the public website).
 
-Falls through to the normal Website Settings logo when no `Company Branding`
-record exists for the resolved company, so unbranded companies aren't broken.
-Core `Company` doctype is untouched — this is fully additive, living only in
-`custom_theme`.
+**Where it hooks in:**
+- `update_website_context` hook — swaps the public website header logo
+  (`banner_image`) and the browser tab favicon per visitor's resolved
+  company. This same context pipeline renders the desk shell (`/app`), so
+  it covers the desk favicon too.
+- The desk **navbar** logo (`frappe.boot.app_logo_url`) needs a different
+  fix: `frappe/boot.py`'s `get_bootinfo()` runs `boot_session` hooks
+  *before* it sets `bootinfo.app_logo_url`, so a `boot_session` hook can
+  never win against the default — it gets overwritten right after. Instead,
+  `custom_theme/__init__.py` monkeypatches `frappe.boot.get_app_logo` itself
+  (the function `boot.py` actually calls) at app-load time, falling back to
+  the original function when no company logo is set.
 
 ## Apply on a server
 
@@ -53,12 +67,16 @@ If `custom_theme` is already installed as an app on the target bench:
    bench, and `custom_theme/custom_theme/utils.py` into
    `apps/custom_theme/custom_theme/utils.py` (merge if that file already has
    other content).
-4. Add the `update_website_context` and `boot_session` hook lines from
+4. Add the `update_website_context` hook line from
    `custom_theme/custom_theme/hooks.py` (see the copy here) into the target
    bench's `apps/custom_theme/custom_theme/hooks.py`.
-5. Run `bench --site <site> migrate` (syncs the patches *and* the new
+5. Merge the `_patch_desk_app_logo()` function and its call from
+   `custom_theme/custom_theme/__init__.py` (see the copy here) into the
+   target bench's `apps/custom_theme/custom_theme/__init__.py`.
+6. Run `bench --site <site> migrate` (syncs the patches *and* the new
    doctype table in one pass), then restart the bench web process so the new
-   hooks are loaded.
+   hooks and the monkeypatch (it only runs once, at process import) are
+   loaded.
 
 If `custom_theme` is **not** installed as an app on the target bench (no
 need to install a new app just for this), run each patch directly via
