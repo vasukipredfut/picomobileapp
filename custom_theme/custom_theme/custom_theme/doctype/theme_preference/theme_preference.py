@@ -67,13 +67,19 @@ def save_my_preferences(**kwargs):
 @frappe.whitelist()
 def get_my_profile():
 	user = frappe.get_doc("User", frappe.session.user)
-	roles = [r.role for r in user.roles if r.role not in ("All", "Guest")]
+
+	if user.role_profile_name:
+		role = user.role_profile_name
+	else:
+		roles = [r.role for r in user.roles if r.role not in ("All", "Guest")]
+		role = roles[0] if roles else user.user_type
+
 	return {
 		"full_name": user.full_name,
 		"email": user.name,
 		"phone": user.phone,
 		"username": user.username or user.name,
-		"role": roles[0] if roles else user.user_type,
+		"role": role,
 	}
 
 

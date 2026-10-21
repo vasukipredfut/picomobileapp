@@ -203,7 +203,13 @@ globally too, e.g. to form buttons):
 - **Profile Information** (Full Name, Phone — Username/Email/Role are
   read-only, pulled from the User doctype) saves via a separate
   `save_my_profile` whitelisted method, independent of the color/font
-  preferences save.
+  preferences save. **Role** prefers `User.role_profile_name` (the
+  "Role Profile" field — a named bundle of roles, distinct from the raw
+  `roles` child table) when the user has one set; falls back to the first
+  non-generic individual role, then `user_type`, when they don't — verified
+  both paths live (temporarily set then reverted `role_profile_name` on a
+  test user to confirm the switch, rather than assuming it from reading the
+  code).
 
 **How it works:**
 - `custom_theme/custom_theme/page/my_preferences/my_preferences.js` builds
