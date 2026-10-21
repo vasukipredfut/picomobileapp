@@ -243,9 +243,23 @@ SCRIPT = """
 
 
 def execute():
+	# frappe.desk.utils.validate_route_conflict (run on every Workspace save)
+	# skips its check entirely when this flag is set — bench migrate sets it
+	# automatically, but bench console does not, so re-running this patch via
+	# console (needed any time it's edited, since it's no longer a fresh
+	# patch) would otherwise throw "Name already taken" the moment the old
+	# Page record hasn't been removed yet. Set defensively regardless of
+	# call order, not just by reordering below.
+	frappe.flags.in_migrate = True
+
+	# Must run before ensure_workspace(): on a bench where this patch has
+	# never succeeded before, the old Page: my-preferences record is still
+	# there, and the new Workspace's save would collide with it on the same
+	# route slug otherwise (confirmed live: this exact NameError on a fresh
+	# server run).
+	remove_old_page()
 	ensure_custom_html_block()
 	ensure_workspace()
-	remove_old_page()
 
 
 def ensure_custom_html_block():

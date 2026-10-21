@@ -144,6 +144,21 @@ route slug (a Workspace titled "My Preferences" slugifies to the identical
 `/app/my-preferences`, so the navbar link needed no change). The old Page's
 files are removed from this app entirely.
 
+**Deploy order matters here, and so does how you run it.**
+`frappe.desk.utils.validate_route_conflict` — run on every Workspace
+save — skips its own check entirely when `frappe.flags.in_migrate` is set.
+`bench migrate` sets that automatically; `bench console` does not. On a
+bench where this patch has never succeeded before, `execute()` originally
+called `ensure_workspace()` *before* `remove_old_page()` — so run via
+`bench console` (required any time this patch is edited after its first
+successful run, same as every other patch in this file — see "Updating an
+already-applied patch" above), the new Workspace's save collided with the
+still-present old Page on the identical route slug and threw `NameError:
+Name already taken` (confirmed live on a fresh deploy). Fixed by calling
+`remove_old_page()` first, *and* setting `frappe.flags.in_migrate = True`
+at the top of `execute()` regardless of call order — belt and suspenders,
+since this patch will need console re-runs again for any future edit.
+
 Two real bugs surfaced while porting the UI into the Custom HTML Block's
 "script" field (which runs once against a `root_element` variable bound to
 the block's Shadow Root — see the welcome banner notes above for why it's
