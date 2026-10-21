@@ -282,15 +282,15 @@ body .page-sidebar .standard-sidebar-item.active {
     background-color: #d7e3f3 !important; /* was #7e7d7b */
 }
 .sidebar-item-icon .icon-md {
-    fill: #1572b6 !important; /* was white */
-    stroke: #1572b6 !important; /* was white */
+    fill: #378fcd !important; /* was white */
+    stroke: #378fcd !important; /* was white */
 }
 .sidebar-item-icon[item-icon="milestone"] .icon-md {
-    fill: #1572b6 !important; /* was white */
-    stroke: #1572b6 !important; /* was white */
+    fill: #378fcd !important; /* was white */
+    stroke: #378fcd !important; /* was white */
 }
 .sidebar-item-icon .icon-md use {
-    color: #1572b6 !important; /* was white */
+    color: #378fcd !important; /* was white */
 }
 .icon-md {
     fill: white !important;
@@ -301,8 +301,8 @@ body .page-sidebar .standard-sidebar-item.active {
 }
 /* Target the specific icon and change its color to white */
 .sidebar-item-icon svg use[href="#icon-milestone"] {
-    fill: #1572b6 !important; /* was white */
-    stroke: #1572b6 !important; /* was white */
+    fill: #378fcd !important; /* was white */
+    stroke: #378fcd !important; /* was white */
 }
 
 /* Default hover and active states */
@@ -476,11 +476,11 @@ a.attached-file-link {
 
 
 .btn-reset.drop-icon.show-in-edit-mode svg use {
-    fill: white !important;
-    stroke: white !important;
+    fill: #1f2937 !important; /* was white - invisible on the now-white sidebar */
+    stroke: #1f2937 !important;
 }
 .btn-reset.drop-icon.show-in-edit-mode {
-    color: white !important;
+    color: #1f2937 !important; /* was white */
 }
 
 .btn-reset.drop-icon.show-in-edit-mode svg {
@@ -488,16 +488,16 @@ a.attached-file-link {
     stroke: currentColor !important;
 }
 .btn-reset.drop-icon.show-in-edit-mode svg {
-    fill: white !important;
-    stroke: white !important;
+    fill: #1f2937 !important; /* was white */
+    stroke: #1f2937 !important;
 }
 
 .btn-reset.drop-icon.show-in-edit-mode svg use {
-    fill: white !important;
-    stroke: white !important;
+    fill: #1f2937 !important; /* was white */
+    stroke: #1f2937 !important;
 }
 .btn-reset.drop-icon.show-in-edit-mode {
-    color: white !important;
+    color: #1f2937 !important; /* was white */
 }
 
 .btn-reset.drop-icon.show-in-edit-mode svg {
@@ -505,7 +505,7 @@ a.attached-file-link {
     stroke: currentColor !important;
 }
 .btn-reset.drop-icon.show-in-edit-mode svg {
-    filter: brightness(0) invert(1) !important;
+    filter: none !important; /* was brightness(0) invert(1), which force-whitened the icon regardless of fill/stroke above */
 }
 
 
