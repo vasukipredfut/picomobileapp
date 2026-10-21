@@ -48,3 +48,13 @@ body .container {
 	align-items: center;
 	justify-content: center;
 }
+
+/* Hide doctype icons in the left sidebar's nested dropdown items (e.g. User,
+   Salary Slip, Employee under HR/Payroll). .sidebar-child-item is the
+   wrapper Frappe's own sidebar.html uses only for a module's nested
+   children — top-level module items (HR, Payroll, Accounting...) sit
+   directly under .desk-sidebar and are NOT inside a .sidebar-child-item, so
+   this leaves those (already themed blue by spokes_app) untouched. */
+.sidebar-child-item .sidebar-item-icon {
+	display: none !important;
+}
