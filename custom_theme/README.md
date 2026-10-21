@@ -160,6 +160,20 @@ those applied globally too, e.g. to form buttons):
   add another field/flow that changes this doctype outside
   `save_my_preferences`, it needs the same cache-clear.
 
+**Making it reachable from the navbar:** the desk navbar's "My Profile"
+dropdown item is a seeded row in the **Navbar Settings** doctype
+(`settings_dropdown` child table, `item_label="My Profile"`,
+`route=/app/user-profile`) — not something any hook currently touches. The
+`update_profile_navbar_link` patch (`[post_model_sync]` in `patches.txt`,
+same idempotent-patch convention as `setup_sidebar_menu`/
+`setup_company_dashboard`) repoints that row to `/app/my-preferences`. Since
+it's a genuinely new patch (not an edit to an already-applied one), a normal
+`bench migrate` runs it automatically — no console-exec workaround needed,
+unlike the "updating an already-applied patch" case above. Also note
+`frappe.boot.navbar_settings` is itself cached the same way `bootinfo` is
+(`frappe.get_cached_doc("Navbar Settings")`), so a plain DB edit outside
+this patch would need `frappe.clear_cache()` too to show up immediately.
+
 ## Apply on a server
 
 If `custom_theme` is already installed as an app on the target bench:
