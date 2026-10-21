@@ -3,6 +3,15 @@
 // the same way my_preferences.js applies it live before Save — so the choice
 // sticks across page loads and new sessions, not just while on that page.
 //
+// App Color covers three separate elements that all used to carry their own
+// independent hardcoded color, which is why they visibly disagreed with each
+// other before this: the navbar itself, .page-head.flex (the page-title bar
+// directly under the navbar — giving it the SAME color as the navbar is what
+// makes the two read as one continuous bar instead of two stacked layers),
+// and .pico-welcome-banner (the Home Dashboard's welcome banner, which has
+// its own gradient set via a Custom HTML Block's "style" field in the DB,
+// entirely unrelated to any CSS file).
+//
 // app_include_js scripts can execute before frappe's own core bundle has
 // defined `frappe.ready` (script order isn't guaranteed), so this polls for
 // `frappe.boot` instead of calling frappe.ready() directly.
@@ -19,11 +28,17 @@
 				document.head.appendChild(style);
 			}
 			style.textContent = `
-				.navbar { background: ${pref.app_color} !important; }
+				.navbar,
+				.page-head.flex {
+					background: ${pref.app_color} !important;
+				}
 				.sidebar-item-icon .icon-md,
 				.sidebar-item-icon .icon-md use {
 					fill: ${pref.app_color} !important;
 					stroke: ${pref.app_color} !important;
+				}
+				.pico-welcome-banner {
+					background: ${pref.app_color} !important;
 				}
 			`;
 		}

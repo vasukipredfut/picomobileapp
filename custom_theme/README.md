@@ -174,6 +174,36 @@ unlike the "updating an already-applied patch" case above. Also note
 (`frappe.get_cached_doc("Navbar Settings")`), so a plain DB edit outside
 this patch would need `frappe.clear_cache()` too to show up immediately.
 
+**App Color now covers three elements, not just the navbar** — found by
+actually checking what the screenshots showed after the first version
+shipped (a visibly two-toned header, and an unchanged welcome banner):
+- `.navbar` *and* `.page-head.flex` (the page-title bar directly under the
+  navbar) are set to the **same** color, which is what makes them read as
+  one continuous bar instead of two visibly different-colored stacked
+  layers — merely coloring the navbar was the original bug here, not a
+  separate "merge" step.
+- `.pico-welcome-banner` — the Home Dashboard's welcome banner has its own
+  hardcoded gradient, but it's **not** in any CSS file: it's set via the
+  `style` field on its `Custom HTML Block` document
+  ("Pico Dashboard Welcome Banner") directly in the database. `!important`
+  on our rule is enough to win since that field's own rule doesn't use
+  `!important`.
+
+**Logo made rectangular, not square** — `company_branding.css`'s
+`.app-logo` previously forced `width: 40px; height: 40px`, which
+squished/cropped any non-square uploaded logo into a square. Changed to
+`height: 40px; width: auto; max-width: 140px`, so it sizes to the uploaded
+image's own real aspect ratio (verified live: a 1920×1080 test logo now
+renders at a proportional 71×40, not forced to 40×40).
+
+Renamed `company_branding.css` → `company_branding-v2.css` and
+`apply_theme_preference-v2.js` → `apply_theme_preference-v3.js` for the
+same cache-busting reason as every other file in this app — worth calling
+out specifically for `company_branding.css`, since it had kept its
+*original* filename this entire project, so this was the first time it
+ever needed a cache-bust, and the old 40×40-square version was still being
+served to any browser that had loaded it even once before.
+
 ## Apply on a server
 
 If `custom_theme` is already installed as an app on the target bench:
@@ -193,8 +223,12 @@ If `custom_theme` is already installed as an app on the target bench:
 5. Merge the `_patch_desk_app_logo()` function and its call from
    `custom_theme/custom_theme/__init__.py` (see the copy here) into the
    target bench's `apps/custom_theme/custom_theme/__init__.py`.
-6. Copy `custom_theme/custom_theme/public/css/company_branding.css` into
-   `apps/custom_theme/custom_theme/public/css/` on the target bench.
+6. Copy `custom_theme/custom_theme/public/css/company_branding-v2.css` into
+   `apps/custom_theme/custom_theme/public/css/` on the target bench, and
+   make sure `hooks.py`'s `app_include_css`/`web_include_css` reference this
+   current filename (it's been renamed a few times for cache-busting — see
+   "Why the renames" sections — always check this repo's current `hooks.py`
+   rather than assuming a filename from an earlier step here).
 7. Run `bench --site <site> migrate` (syncs the patches *and* the new
    doctype table in one pass), then restart the bench web process so the new
    hooks and the monkeypatch (it only runs once, at process import) are

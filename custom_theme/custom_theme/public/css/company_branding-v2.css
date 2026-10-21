@@ -4,8 +4,12 @@
    rules (adds a .navbar ancestor) so they win regardless of CSS load order. */
 
 .navbar .app-logo {
-	width: 40px;
+	/* was a forced 40x40 square, which squished/cropped any non-square
+	   uploaded logo. Height-constrained + width auto lets it size
+	   rectangularly to its own natural aspect ratio instead. */
+	width: auto;
 	height: 40px;
+	max-width: 140px;
 	object-fit: contain;
 }
 

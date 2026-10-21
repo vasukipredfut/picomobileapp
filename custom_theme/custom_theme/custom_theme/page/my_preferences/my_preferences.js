@@ -88,11 +88,17 @@ custom_theme.MyPreferences = class MyPreferences {
 			document.head.appendChild(style);
 		}
 		style.textContent = `
-			.navbar { background: ${this.state.app_color} !important; }
+			.navbar,
+			.page-head.flex {
+				background: ${this.state.app_color} !important;
+			}
 			.sidebar-item-icon .icon-md,
 			.sidebar-item-icon .icon-md use {
 				fill: ${this.state.app_color} !important;
 				stroke: ${this.state.app_color} !important;
+			}
+			.pico-welcome-banner {
+				background: ${this.state.app_color} !important;
 			}
 		`;
 
