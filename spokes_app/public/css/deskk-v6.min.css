@@ -563,10 +563,41 @@ a {
 .sidebar-item-label {
     display: flex;
     align-items: center;
-    justify-content: center;
-    text-align: center;
+    justify-content: flex-start; /* was center — centering made module/doctype
+       rows look randomly staggered instead of forming a clean left-aligned
+       list; flex-start lines icon+label up against the sidebar's left edge
+       like the reference (Sunraja) layout. */
+    text-align: left; /* was center */
     font-size: 18px !important; /* Increase font size */
     font-weight: bold; /* Make text bold */
+}
+
+/* Nested doctype items (User, Salary Slip, etc.) get extra left padding on
+   top of Frappe's own indent (child items already carry margin-left: 10px
+   vs the parent's -10px — a 20px gap that center-alignment was hiding) so
+   the hierarchy between a module and its doctypes reads clearly at a
+   glance, as in the Sunraja reference. */
+.sidebar-child-item .sidebar-item-label {
+    padding-left: 14px;
+}
+
+/* Sidebar scrollbar — Frappe's own base CSS sets scrollbar-width: thin on
+   this container, which is barely visible. Thicken it (Firefox via the
+   scrollbar-width keyword — "auto" is the thickest option that property
+   supports; Chrome/Edge/Safari via the ::-webkit-scrollbar pseudo-element,
+   which has no equivalent keyword and needs an explicit pixel width). */
+.col-lg-2.layout-side-section {
+    scrollbar-width: auto;
+}
+.col-lg-2.layout-side-section::-webkit-scrollbar {
+    width: 10px;
+}
+.col-lg-2.layout-side-section::-webkit-scrollbar-thumb {
+    background-color: #b7bdc6;
+    border-radius: 6px;
+}
+.col-lg-2.layout-side-section::-webkit-scrollbar-track {
+    background-color: #f0f1f2;
 }
 
 .layout-main-section-wrapper {
