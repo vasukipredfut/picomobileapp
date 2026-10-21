@@ -1,0 +1,23 @@
+/* Full width by default — "full width" is otherwise only a per-browser
+   localStorage toggle (frappe.ui.toolbar.toggle_full_width), so this
+   reproduces its effect unconditionally instead of relying on every user
+   remembering to flip it. */
+body .container {
+	width: 90% !important;
+	max-width: 100% !important;
+}
+.page-container .page-body {
+	width: 100% !important;
+	max-width: 100% !important;
+}
+
+/* Sidebar white background / dark text / blue icons is now owned entirely
+   by spokes_app's deskk-v3.min.css (see apps/spokes_app). It used to also
+   live here, but that copy set icon color via var(--navbar-bg), which here
+   resolves to Frappe's own default ("white") since this bench's navbar
+   background is a hardcoded gradient in spokes_app's CSS, never actually
+   assigned to that custom property — so this file's white rule was
+   silently beating spokes_app's correct blue rule, since custom_theme
+   loads after spokes_app (both apps.txt order and both using !important).
+   Removed rather than fixed in place, to avoid two apps fighting over the
+   same elements going forward. */

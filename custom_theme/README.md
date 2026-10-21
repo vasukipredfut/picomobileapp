@@ -80,24 +80,31 @@ unrestricted users (e.g. Guest visitors on the public website).
   adjustable this way — browsers always render a tab icon tiny regardless of
   the source image's dimensions.
 
-## Desk layout (full width + white sidebar)
+## Desk layout (full width)
 
-`public/css/desk_layout.css` (also loaded via `app_include_css` +
+`public/css/desk_layout-v2.css` (also loaded via `app_include_css` +
 `web_include_css`, alongside `company_branding.css` — both hooks are now
-lists):
-- **Full width by default** — "full width" is otherwise only a per-browser
-  `localStorage.container_fullwidth` toggle
-  (`frappe.ui.toolbar.toggle_full_width` in `toolbar.js`), so there's no
-  server-side "default" to flip; this reproduces the same effect
-  unconditionally (`.container { width: 90%; max-width: 100% }` /
-  `.page-body { width: 100%; max-width: 100% }`) instead.
-- **White sidebar** — forces `.desk-sidebar`/`.standard-sidebar` to a white
-  background with dark text, overriding whatever gave it a dark background
-  by default.
-- **Icon color matches the navbar exactly** — `.sidebar-item-icon` is set to
-  `var(--navbar-bg)`, the same CSS variable the top navbar itself uses for
-  its background, so it tracks the real configured navbar color rather than
-  a hardcoded guess.
+lists). **Full width by default** — "full width" is otherwise only a
+per-browser `localStorage.container_fullwidth` toggle
+(`frappe.ui.toolbar.toggle_full_width` in `toolbar.js`), so there's no
+server-side "default" to flip; this reproduces the same effect
+unconditionally (`.container { width: 90%; max-width: 100% }` /
+`.page-body { width: 100%; max-width: 100% }`) instead.
+
+This file **used to also** own the white-sidebar/blue-icon styling, but that
+duplicated (and, on this bench, actively fought) what `spokes_app`'s
+`deskk-v3.min.css` already does — see `spokes_app/README.md`. The icon-color
+rule here used `var(--navbar-bg)`, which resolves to Frappe's own default
+("white") on this bench, since the navbar's real background is a hardcoded
+gradient in `spokes_app`'s CSS that never touches that custom property. Since
+`custom_theme` loads after `spokes_app` (apps.txt order) and both used
+`!important`, this file's white rule silently beat `spokes_app`'s correct
+blue one. Removed here entirely rather than fixed in place, so there's one
+clear owner of sidebar styling going forward instead of two apps able to
+fight over the same elements again. Renamed `desk_layout.css` →
+`desk_layout-v2.css` for the same cache-busting reason as `spokes_app`'s
+renames (see that README) — this bench's dev server caches `/assets/` for
+12 hours, so editing in place wasn't enough even just for testing.
 
 ## Apply on a server
 
