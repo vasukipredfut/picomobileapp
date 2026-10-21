@@ -290,9 +290,17 @@ def ensure_workspace():
 
 	doc.title = WORKSPACE_TITLE
 	doc.public = 1
-	# Reached via the navbar's "My Profile" link, not general sidebar browsing
-	# — hidden so it doesn't also clutter the top-level workspace tree.
-	doc.is_hidden = 1
+	# NOT is_hidden = 1 — confirmed live this breaks more than just sidebar
+	# cosmetics: frappe/desk/desktop.py's get_workspace_sidebar_items() (the
+	# function that both builds the sidebar tree AND supplies the
+	# this.public_pages list workspace.js's show_page() uses to look up a
+	# workspace's content by name) excludes is_hidden workspaces for any
+	# user without the "Workspace Manager" role. That makes the workspace
+	# not just invisible but genuinely unreachable by direct navigation too
+	# — confirmed: a non-Workspace-Manager user hitting /app/my-preferences
+	# got Frappe's generic "Page not found" even though the record existed,
+	# while Administrator (who bypasses all permission checks) worked fine.
+	doc.is_hidden = 0
 	doc.icon = "setting"
 	doc.content = content
 	# The "content" JSON above is only *layout* (what goes where) — the

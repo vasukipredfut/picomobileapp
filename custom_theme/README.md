@@ -159,6 +159,26 @@ Name already taken` (confirmed live on a fresh deploy). Fixed by calling
 at the top of `execute()` regardless of call order — belt and suspenders,
 since this patch will need console re-runs again for any future edit.
 
+**`is_hidden = 1` doesn't just hide it from the sidebar — it makes the
+workspace unreachable for anyone without the "Workspace Manager" role,
+full stop.** The Workspace was originally set `is_hidden = 1` (reached via
+the navbar's "My Profile" link, not general browsing, so it seemed right to
+keep it out of the top-level tree) — this worked for Administrator (who
+bypasses all permission checks) but gave every other user Frappe's generic
+"Page not found" on `/app/my-preferences`, confirmed live. Root cause,
+traced through the actual client JS: `frappe/desk/desktop.py`'s
+`get_workspace_sidebar_items()` excludes `is_hidden` workspaces for anyone
+lacking "Workspace Manager" — and that's not just the function behind the
+sidebar tree, it's also where `workspace.js` gets `this.public_pages`,
+the exact list `show_page()` searches by name to find a workspace's
+*content* when you navigate directly to its route. Hidden from the list ⇒
+absent from that lookup ⇒ nothing to render, regardless of how you got
+there. Set to `is_hidden = 0` — it now also appears in the general
+workspace tree (a minor cosmetic tradeoff), but is reachable by every user.
+Verified live: calling `get_workspace_sidebar_items()` as a non-admin test
+user (confirmed they lack "Workspace Manager") now includes "My
+Preferences" in the result, where it didn't before.
+
 Two real bugs surfaced while porting the UI into the Custom HTML Block's
 "script" field (which runs once against a `root_element` variable bound to
 the block's Shadow Root — see the welcome banner notes above for why it's
