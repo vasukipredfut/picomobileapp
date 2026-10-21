@@ -164,15 +164,31 @@ a Shadow Root at all):
   jQuery's `.html()` *setter* only assigns `innerHTML` when
   `elem.nodeType === 1` — on anything else it does nothing, with **no
   error, no warning**, which is exactly what made this so slow to track
-  down (confirmed by inspecting jQuery's own source). Native
-  `root_element.innerHTML = htmlString` works fine, since `ShadowRoot`
-  genuinely does support `innerHTML` per spec — jQuery's abstraction just
-  doesn't check for it. Likewise `$(root_element).find(selector)` was
-  replaced with `root_element.querySelectorAll(selector)` throughout
-  (proactively, to rule out the same class of bug a second time) — though
-  wrapping the *individual matched elements* this returns in `$(el)` for
+  down (confirmed by inspecting jQuery's own source). Likewise
+  `$(root_element).find(selector)` was replaced with
+  `root_element.querySelectorAll(selector)` throughout (proactively, to
+  rule out the same class of bug a second time) — though wrapping the
+  *individual matched elements* this returns in `$(el)` for
   `.data()`/`.val()`/`.closest()` remains fine, since those are real
   `nodeType === 1` elements, not the Shadow Root itself.
+- **A second bug hiding behind the first**: switching to
+  `root_element.innerHTML = htmlString` (plain DOM, no jQuery) looked like
+  the complete fix — it rendered the right markup — but **silently stripped
+  all styling** on every re-render. Frappe places this block's `<style>`
+  (and a `<link rel="stylesheet">` to Frappe's own desk bundle) directly
+  inside the Shadow Root as *siblings* of the "html" field's own content,
+  not nested inside it. Assigning `root_element.innerHTML` replaces **all**
+  of the Shadow Root's children — style tag included — which is exactly why
+  the panel rendered with correct structure but zero visual styling
+  (confirmed live: swatches, avatar, and buttons all present in the DOM
+  with their classes, but computed to default browser styling). Fixed by
+  giving the "html" field its own identifiable container
+  (`<div id="mp-root"></div>`) and having the script assign
+  `root_element.querySelector("#mp-root").innerHTML = ...` instead of
+  touching `root_element` directly — confirmed live afterward: avatar
+  computes to a real 64px circle (`border-radius: 50%`), swatches to real
+  28px circles, and Frappe's own button styling (from that surviving
+  `<link>` tag) applies correctly too.
 
 **What's wired to take effect app-wide** (primary/secondary color and
 button style are stored and shown in the panel's own preview, but don't

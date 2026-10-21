@@ -49,6 +49,12 @@ SCRIPT = """
 	var DEFAULTS = {app_color:"#1976d2",primary_color:"#1976d2",secondary_color:"#1976d2",button_style:"Pill",font_size:"Medium",light_mode:1};
 	var state = Object.assign({}, DEFAULTS);
 	var profile = {full_name:"", email:"", phone:"", username:"", role:""};
+	// root_element IS the Shadow Root, and Frappe also places the block's
+	// <style>/<link> tags directly inside it as SIBLINGS of our "html" field
+	// content — not nested inside it. render() targets this specific inner
+	// container (the "html" field's own <div id="mp-root">) instead of
+	// root_element itself, so re-rendering never wipes those sibling tags.
+	var mount = root_element.querySelector("#mp-root");
 
 	function colorSwatches(field, selected) {
 		return COLORS.map(function (c) {
@@ -62,11 +68,17 @@ SCRIPT = """
 	}
 
 	function render() {
-		// NOT $(root_element).html(...) — jQuery's .html() setter only acts on
-		// nodeType===1 (Element) nodes; a ShadowRoot is nodeType===11
-		// (DocumentFragment), so jQuery silently no-ops with no error at all.
-		// Native innerHTML assignment works fine on a ShadowRoot.
-		root_element.innerHTML =
+		// NOT root_element.innerHTML = ... — that would also wipe the
+		// sibling <style>/<link> tags Frappe placed directly in the Shadow
+		// Root (confirmed live: this exact bug silently stripped all CSS on
+		// the very first render). mount (#mp-root, our own "html" field
+		// content) is the only safe assignment target.
+		// NOT $(mount).html(...) either — jQuery's .html() setter only acts
+		// on nodeType===1 (Element) nodes; mount here genuinely is nodeType
+		// 1 so that part would actually be fine, but staying consistent
+		// with plain DOM methods throughout this script avoids relearning
+		// this the hard way a third time.
+		mount.innerHTML =
 			'<div class="my-preferences-page">' +
 				'<div class="profile-card">' +
 					'<div class="profile-avatar">' + frappe.utils.escape_html((profile.full_name || "U").charAt(0).toUpperCase()) + '</div>' +
@@ -243,7 +255,7 @@ def ensure_custom_html_block():
 		doc = frappe.new_doc("Custom HTML Block")
 		doc.name = BLOCK_NAME
 
-	doc.html = "<div></div>"
+	doc.html = '<div id="mp-root"></div>'
 	doc.style = STYLE
 	doc.script = SCRIPT
 	doc.save(ignore_permissions=True)
