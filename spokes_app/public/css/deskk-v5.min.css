@@ -37,8 +37,13 @@
 
 /* Top bar styling */
 .navbar {
-    /*background-color: #5a8bb5; /* Dark top bar */
-     background: linear-gradient(to right, #58ace4, #1572b6);
+    /* was linear-gradient(to right, #58ace4, #1572b6) — a solid color
+       instead, because the SAME gradient stretched across .page-head.flex
+       below (a narrower element, starting after the sidebar, not the full
+       viewport width) produced visibly different colors at the same
+       vertical seam, which is exactly the "two layers" look reported. A
+       solid color can't mismatch itself regardless of each element's width. */
+    background: #1572b6;
      border-bottom: 1px solid rgba(255, 255, 255, 0.3);
 
 }
@@ -104,7 +109,10 @@
 .page-head.flex {
    /* background-color: #5a8bb5 !important;  /* Lighter blue background */
     color: #ffffff !important;  /* White text */
-     background: linear-gradient(to right, #58ace4, #1572b6);
+    /* was linear-gradient(to right, #58ace4, #1572b6) — same reasoning as
+       .navbar above: matches .navbar's solid color so they read as one
+       continuous bar regardless of each element's own width. */
+    background: #1572b6;
      border-bottom: 1px solid rgba(255, 255, 255, 0.3);
 
 }

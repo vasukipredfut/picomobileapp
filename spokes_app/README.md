@@ -1,8 +1,8 @@
 # spokes_app sidebar theme fix
 
-`public/css/deskk-v4.min.css` is a copy of the real file that was at
+`public/css/deskk-v5.min.css` is a copy of the real file that was at
 `apps/spokes_app/spokes_app/public/css/deskk.min.css` on the pico.com bench
-(renamed three times now — see "Why the renames" below), with the left
+(renamed four times now — see "Why the renames" below), with the left
 navigation sidebar's colors changed:
 
 - `.page-sidebar`, `.standard-sidebar-section.nested-container`,
@@ -37,7 +37,26 @@ navbar, e.g. the notification bell — making those blue too would make them
 invisible against the blue background), print/chevron/menu icon colors, and
 every other rule — is unchanged from the original.
 
-## Why the renames (deskk.min.css → deskk-v2 → deskk-v3 → deskk-v4)
+## Navbar + page-head "two layers" fix (v5)
+
+`.navbar` and `.page-head.flex` (the page-title bar directly under the
+navbar) already used the **identical** gradient —
+`linear-gradient(to right, #58ace4, #1572b6)` — so on paper they should
+have matched. They didn't, because each element computes that gradient
+independently over its *own* width, and `.page-head.flex` is narrower than
+`.navbar` (it starts after the sidebar, not at the screen edge). The same
+"to right" gradient stretched across two different widths produces visibly
+different colors at any given horizontal position — which is exactly the
+seam reported, and it's a **default-state** bug: it happens for every user
+regardless of whether they've ever touched `custom_theme`'s per-user Theme
+Preference feature. Fixed by making both solid `#1572b6` (the gradient's
+darker stop) instead of a gradient — a solid color is identical at every
+width by construction, so it can't mismatch itself the way a gradient can.
+`custom_theme`'s per-user `app_color` override (when a user has set one)
+still applies on top via `!important` exactly as before; this only changes
+what happens when no preference is set.
+
+## Why the renames (deskk.min.css → deskk-v2 → deskk-v3 → deskk-v4 → deskk-v5)
 
 nginx serves everything under `/assets/` with `Cache-Control: max-age=31536000`
 (one year). Since the filename never changed, every browser that had already
@@ -56,14 +75,14 @@ filename, permanently, not just this once.
 ## Apply on the server
 
 ```bash
-cp ~/frappe-bench/apps/spokes_app/spokes_app/public/css/deskk-v3.min.css \
-   ~/frappe-bench/apps/spokes_app/spokes_app/public/css/deskk-v3.min.css.bak
+cp ~/frappe-bench/apps/spokes_app/spokes_app/public/css/deskk-v4.min.css \
+   ~/frappe-bench/apps/spokes_app/spokes_app/public/css/deskk-v4.min.css.bak
 
-curl -s -o ~/frappe-bench/apps/spokes_app/spokes_app/public/css/deskk-v4.min.css \
-  https://raw.githubusercontent.com/vasukipredfut/picomobileapp/main/spokes_app/public/css/deskk-v4.min.css
+curl -s -o ~/frappe-bench/apps/spokes_app/spokes_app/public/css/deskk-v5.min.css \
+  https://raw.githubusercontent.com/vasukipredfut/picomobileapp/main/spokes_app/public/css/deskk-v5.min.css
 
 # point the hook at the new filename
-sed -i 's#/assets/spokes_app/css/deskk-v3.min.css#/assets/spokes_app/css/deskk-v4.min.css#' \
+sed -i 's#/assets/spokes_app/css/deskk-v4.min.css#/assets/spokes_app/css/deskk-v5.min.css#' \
   ~/frappe-bench/apps/spokes_app/spokes_app/hooks.py
 grep -n "deskk" ~/frappe-bench/apps/spokes_app/spokes_app/hooks.py   # confirm it updated
 

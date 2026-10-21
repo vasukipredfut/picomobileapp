@@ -80,9 +80,9 @@ unrestricted users (e.g. Guest visitors on the public website).
   adjustable this way — browsers always render a tab icon tiny regardless of
   the source image's dimensions.
 
-## Desk layout (full width)
+## Desk layout (full width + hidden navbar items)
 
-`public/css/desk_layout-v2.css` (also loaded via `app_include_css` +
+`public/css/desk_layout-v3.css` (also loaded via `app_include_css` +
 `web_include_css`, alongside `company_branding.css` — both hooks are now
 lists). **Full width by default** — "full width" is otherwise only a
 per-browser `localStorage.container_fullwidth` toggle
@@ -90,6 +90,12 @@ per-browser `localStorage.container_fullwidth` toggle
 server-side "default" to flip; this reproduces the same effect
 unconditionally (`.container { width: 90%; max-width: 100% }` /
 `.page-body { width: 100%; max-width: 100% }`) instead.
+
+**Notification bell and Help dropdown hidden** — `.navbar
+.dropdown-notifications, .navbar .dropdown-help { display: none !important
+}`. These are the exact `<li>` wrapper classes Frappe's own
+`navbar.html` uses for these two items (confirmed from Frappe's source, not
+guessed).
 
 This file **used to also** own the white-sidebar/blue-icon styling, but that
 duplicated (and, on this bench, actively fought) what `spokes_app`'s
@@ -102,9 +108,11 @@ gradient in `spokes_app`'s CSS that never touches that custom property. Since
 blue one. Removed here entirely rather than fixed in place, so there's one
 clear owner of sidebar styling going forward instead of two apps able to
 fight over the same elements again. Renamed `desk_layout.css` →
-`desk_layout-v2.css` for the same cache-busting reason as `spokes_app`'s
-renames (see that README) — this bench's dev server caches `/assets/` for
-12 hours, so editing in place wasn't enough even just for testing.
+`desk_layout-v2.css` → `desk_layout-v3.css` (the latter for the
+hide-navbar-items addition) for the same cache-busting reason as
+`spokes_app`'s renames (see that README) — this bench's dev server caches
+`/assets/` for 12 hours, so editing in place wasn't enough even just for
+testing.
 
 ## Per-user Theme Preferences
 

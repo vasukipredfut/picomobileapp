@@ -21,3 +21,11 @@ body .container {
    loads after spokes_app (both apps.txt order and both using !important).
    Removed rather than fixed in place, to avoid two apps fighting over the
    same elements going forward. */
+
+/* Hide the notification bell and Help dropdown from the desk navbar.
+   .dropdown-notifications and .dropdown-help are the exact <li> wrapper
+   classes Frappe's own navbar.html uses for these two items. */
+.navbar .dropdown-notifications,
+.navbar .dropdown-help {
+	display: none !important;
+}
