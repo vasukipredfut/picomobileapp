@@ -62,9 +62,10 @@ unrestricted users (e.g. Guest visitors on the public website).
 
 **Where it hooks in:**
 - `update_website_context` hook — swaps the public website header logo
-  (`banner_image`) and the browser tab favicon per visitor's resolved
-  company. This same context pipeline renders the desk shell (`/app`), so
-  it covers the desk favicon too.
+  (`banner_image`), the browser tab favicon, and the boot-time splash
+  screen logo (`splash_image` — see "Desk layout" below) per visitor's
+  resolved company. This same context pipeline renders the desk shell
+  (`/app`), so it covers the desk favicon and splash screen too.
 - The desk **navbar** logo (`frappe.boot.app_logo_url`) needs a different
   fix: `frappe/boot.py`'s `get_bootinfo()` runs `boot_session` hooks
   *before* it sets `bootinfo.app_logo_url`, so a `boot_session` hook can
@@ -80,9 +81,9 @@ unrestricted users (e.g. Guest visitors on the public website).
   adjustable this way — browsers always render a tab icon tiny regardless of
   the source image's dimensions.
 
-## Desk layout (full width + hidden navbar items)
+## Desk layout (full width + hidden navbar items + splash screen)
 
-`public/css/desk_layout-v3.css` (also loaded via `app_include_css` +
+`public/css/desk_layout-v4.css` (also loaded via `app_include_css` +
 `web_include_css`, alongside `company_branding.css` — both hooks are now
 lists). **Full width by default** — "full width" is otherwise only a
 per-browser `localStorage.container_fullwidth` toggle
@@ -96,6 +97,29 @@ unconditionally (`.container { width: 90%; max-width: 100% }` /
 }`. These are the exact `<li>` wrapper classes Frappe's own
 `navbar.html` uses for these two items (confirmed from Frappe's source, not
 guessed).
+
+**Splash screen — blue background + company logo.** Every full page
+load/refresh briefly shows `templates/includes/splash_screen.html` (a
+`<div class="centered splash">` containing an `<img>`) before desk JS
+boots and replaces it — normally the generic Frappe logo on white. Two
+changes:
+- `.splash { width: 100vw; height: 100vh; background-color: #1572b6;
+  display: flex; ... }` in this file. Confirmed safe to make a
+  full-viewport overlay (not just recolor the small centered box): `$(
+  ".splash").remove()` runs once boot finishes
+  (`frappe/public/js/frappe/desk.js`), so it cannot linger or bleed into
+  the loaded page afterward. `.centered`'s existing `top:50%; left:50%;
+  transform:translate(-50%,-50%)` still correctly spans the exact viewport
+  once `width`/`height` are added — translating a 100vw/100vh box by -50%
+  of its own size from the center point puts its edges exactly at the
+  viewport edges, no extra positioning rules needed.
+- `splash_image` — `utils.update_website_context` (see Company Branding
+  below) now also sets this context key alongside `banner_image`/
+  `favicon`. No template override was needed: `splash_image` is already a
+  context variable `splash_screen.html` reads natively, and already a
+  stock Website Settings field — same pipeline, one more key. Verified
+  live by fetching the server-rendered HTML directly: the splash `<img>`'s
+  `src` correctly resolved to the current company's uploaded logo.
 
 This file **used to also** own the white-sidebar/blue-icon styling, but that
 duplicated (and, on this bench, actively fought) what `spokes_app`'s

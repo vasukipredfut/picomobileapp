@@ -29,3 +29,22 @@ body .container {
 .navbar .dropdown-help {
 	display: none !important;
 }
+
+/* Splash screen (templates/includes/splash_screen.html) — shown briefly on
+   every full page load/refresh before the desk JS boots, normally a white
+   background behind the generic Frappe logo. $(".splash").remove() runs
+   once boot finishes (confirmed in frappe/public/js/frappe/desk.js), so
+   this is safe to make a full-viewport overlay — it cannot linger or bleed
+   into the loaded page afterward. .centered's existing
+   top:50%;left:50%;transform:translate(-50%,-50%) still correctly spans
+   the full viewport once width/height are added, since translating a
+   100vw/100vh box by -50% of its own size from the center point puts its
+   edges exactly at the viewport edges. */
+.splash {
+	width: 100vw;
+	height: 100vh;
+	background-color: #1572b6;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}

@@ -31,13 +31,17 @@ def get_company_logo(company=None):
 
 
 def update_website_context(context):
-	"""update_website_context hook: swap the public website header logo and the
-	browser tab favicon per company. Covers the desk shell (/app) too, since
-	it's rendered through this same website context pipeline."""
+	"""update_website_context hook: swap the public website header logo, the
+	browser tab favicon, and the boot-time splash screen logo per company.
+	Covers the desk shell (/app) too, since it's rendered through this same
+	website context pipeline. splash_image is a context key Frappe's own
+	templates/includes/splash_screen.html already reads natively (it's also
+	a stock Website Settings field) — no template override needed."""
 	logo = get_company_logo()
 	if logo:
 		context["banner_image"] = logo
 		context["favicon"] = logo
+		context["splash_image"] = logo
 
 
 def set_theme_preference_in_boot(bootinfo):
