@@ -65,20 +65,28 @@ body .container {
    bars. .page-title is already display:flex (Frappe's own page.html), so a
    ::before pseudo-element becomes a flex item and naturally renders before
    its first real child (.sidebar-toggle-btn) with no extra positioning.
-   --page-head-logo is set once at boot by apply_theme_preference-v5.js from
+   --page-head-logo is set once at boot by apply_theme_preference-v6.js from
    frappe.boot.app_logo_url (the same per-company logo already shown in the
    navbar) and persists across client-side route changes since .page-title
-   inherits it from the root element. */
+   inherits it from the root element.
+
+   Sized 40px tall to match the sidebar-toggle button's own 40x40 box
+   (confirmed via getBoundingClientRect) so the two read as the same visual
+   scale, but wider (64px) rather than a 40x40 square — most uploaded
+   company logos are wider than tall, and background-size:contain would
+   otherwise shrink a wide logo down to fit a square box, making it look
+   smaller than the hamburger icon next to it despite the box itself being
+   the same height. */
 .page-title::before {
 	content: "";
-	width: 28px;
-	height: 28px;
+	width: 64px;
+	height: 40px;
 	margin-right: 10px;
 	flex-shrink: 0;
 	background-image: var(--page-head-logo, none);
 	background-size: contain;
 	background-repeat: no-repeat;
-	background-position: center;
+	background-position: left center;
 }
 
 /* The logo now shows in the page-head row instead — hiding it here removes
