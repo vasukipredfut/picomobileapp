@@ -58,3 +58,31 @@ body .container {
 .sidebar-child-item .sidebar-item-icon {
 	display: none !important;
 }
+
+/* Move the company logo from the top navbar row into the page-head row, in
+   front of the sidebar-toggle (hamburger) button and the page title — so
+   the logo and "Home Dashboard" read as one row instead of two stacked
+   bars. .page-title is already display:flex (Frappe's own page.html), so a
+   ::before pseudo-element becomes a flex item and naturally renders before
+   its first real child (.sidebar-toggle-btn) with no extra positioning.
+   --page-head-logo is set once at boot by apply_theme_preference-v5.js from
+   frappe.boot.app_logo_url (the same per-company logo already shown in the
+   navbar) and persists across client-side route changes since .page-title
+   inherits it from the root element. */
+.page-title::before {
+	content: "";
+	width: 28px;
+	height: 28px;
+	margin-right: 10px;
+	flex-shrink: 0;
+	background-image: var(--page-head-logo, none);
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+}
+
+/* The logo now shows in the page-head row instead — hiding it here removes
+   the now-empty-looking strip of whitespace it left behind in the navbar. */
+.navbar .navbar-brand {
+	display: none !important;
+}

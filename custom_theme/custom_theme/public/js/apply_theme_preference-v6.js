@@ -50,7 +50,28 @@
 		setTimeout(() => observer.disconnect(), 15000); // give up rather than watch forever
 	}
 
+	function applyPageHeadLogo() {
+		// --page-head-logo is read by desk_layout CSS's .page-title::before to
+		// show the company logo in front of the sidebar-toggle button/title,
+		// instead of the separate navbar row it used to sit in. Set on the root
+		// element (not .page-title, which Frappe tears down and rebuilds on
+		// every route) so it survives client-side navigation without needing
+		// to re-run on every page change.
+		//
+		// The URL must be quoted inside url(...): uploaded file names routinely
+		// contain spaces (e.g. "Screenshot from ....png"), and an unquoted
+		// url() value with a raw space is invalid CSS — CSSStyleDeclaration's
+		// setProperty then silently drops the whole custom property instead of
+		// throwing, which is why this needs calling out explicitly.
+		const logoUrl = frappe.boot && frappe.boot.app_logo_url;
+		if (logoUrl) {
+			document.documentElement.style.setProperty("--page-head-logo", `url("${logoUrl}")`);
+		}
+	}
+
 	function apply() {
+		applyPageHeadLogo();
+
 		const pref = frappe.boot && frappe.boot.custom_theme_preference;
 		if (!pref) return;
 
