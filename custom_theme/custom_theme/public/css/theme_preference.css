@@ -1,0 +1,95 @@
+/* Font Size preference: affects the desk navbar and the My Preferences /
+   User Profile pages only, per spec — not the rest of the desk. */
+body.theme-font-small .navbar,
+body.theme-font-small .navbar .navbar-brand,
+body.theme-font-small .navbar a,
+body.theme-font-small .navbar .dropdown-toggle {
+	font-size: 12px !important;
+}
+body.theme-font-large .navbar,
+body.theme-font-large .navbar .navbar-brand,
+body.theme-font-large .navbar a,
+body.theme-font-large .navbar .dropdown-toggle {
+	font-size: 18px !important;
+}
+
+body.theme-font-small .my-preferences-page,
+body.theme-font-small [data-page-route="user-profile"] {
+	font-size: 12px !important;
+}
+body.theme-font-large .my-preferences-page,
+body.theme-font-large [data-page-route="user-profile"] {
+	font-size: 18px !important;
+}
+
+/* My Preferences page layout */
+.my-preferences-page {
+	max-width: 650px;
+	padding: 20px;
+}
+.theme-pref-section h5 {
+	margin-bottom: 4px;
+}
+.theme-pref-toggle {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 16px 0;
+}
+.theme-pref-group {
+	margin-bottom: 20px;
+}
+.theme-pref-label {
+	display: block;
+	font-weight: 600;
+	margin-bottom: 8px;
+}
+.theme-swatch-row {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 8px;
+	flex-wrap: wrap;
+}
+.theme-swatch {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	display: inline-block;
+	cursor: pointer;
+	border: 2px solid transparent;
+}
+.theme-swatch.selected {
+	border-color: var(--text-color, #1f2937);
+	box-shadow: 0 0 0 2px #fff inset;
+}
+.theme-hex-input {
+	width: 120px;
+	padding: 4px 8px;
+	border: 1px solid var(--border-color, #d1d8dd);
+	border-radius: 4px;
+}
+.theme-btn-group {
+	display: flex;
+	gap: 8px;
+}
+.theme-option-btn.active {
+	background: var(--navbar-bg, #1976d2);
+	color: #fff;
+	border-color: transparent;
+}
+.theme-preview-row {
+	display: flex;
+	gap: 10px;
+}
+.theme-preview-btn {
+	padding: 6px 20px;
+	border: none;
+}
+.theme-pref-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+	margin-top: 24px;
+	border-top: 1px solid var(--border-color, #d1d8dd);
+	padding-top: 16px;
+}

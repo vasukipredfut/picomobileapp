@@ -1,0 +1,102 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:user",
+ "creation": "2026-10-21 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "user",
+  "app_color",
+  "primary_color",
+  "secondary_color",
+  "button_style",
+  "font_size",
+  "light_mode"
+ ],
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "User",
+   "options": "User",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "#1976d2",
+   "description": "Applied live to the desk navbar background and sidebar module icon color.",
+   "fieldname": "app_color",
+   "fieldtype": "Data",
+   "label": "App Color"
+  },
+  {
+   "default": "#1976d2",
+   "fieldname": "primary_color",
+   "fieldtype": "Data",
+   "label": "Primary Color"
+  },
+  {
+   "default": "#1976d2",
+   "fieldname": "secondary_color",
+   "fieldtype": "Data",
+   "label": "Secondary Color"
+  },
+  {
+   "default": "Pill",
+   "fieldname": "button_style",
+   "fieldtype": "Select",
+   "label": "Button Style",
+   "options": "Pill\nRounded\nSquare"
+  },
+  {
+   "default": "Medium",
+   "description": "Applied live to the desk navbar font size and this preferences page's own font size.",
+   "fieldname": "font_size",
+   "fieldtype": "Select",
+   "label": "Font Size",
+   "options": "Small\nMedium\nLarge"
+  },
+  {
+   "default": "1",
+   "fieldname": "light_mode",
+   "fieldtype": "Check",
+   "label": "Light Mode"
+  }
+ ],
+ "icon": "fa fa-paint-brush",
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-10-21 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Custom Theme",
+ "name": "Theme Preference",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "read": 1,
+   "report": 0,
+   "role": "System Manager",
+   "share": 0,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "if_owner": 1,
+   "read": 1,
+   "role": "All",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}

@@ -38,3 +38,19 @@ def update_website_context(context):
 	if logo:
 		context["banner_image"] = logo
 		context["favicon"] = logo
+
+
+def set_theme_preference_in_boot(bootinfo):
+	"""boot_session hook: embed the logged-in user's saved Theme Preference (if
+	any) into bootinfo, so apply_theme_preference.js can apply it on every page
+	without an extra round-trip. Safe to set here (unlike app_logo_url) since
+	nothing else in frappe/boot.py overwrites this key afterward — the ordering
+	problem only applies to keys boot.py itself assigns later."""
+	user = frappe.session.user
+	if not user or user == "Guest" or not frappe.db.exists("Theme Preference", user):
+		return
+
+	from custom_theme.custom_theme.doctype.theme_preference.theme_preference import FIELDS
+
+	doc = frappe.get_cached_doc("Theme Preference", user)
+	bootinfo.custom_theme_preference = {field: doc.get(field) for field in FIELDS}

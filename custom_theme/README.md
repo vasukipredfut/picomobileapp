@@ -106,6 +106,60 @@ fight over the same elements again. Renamed `desk_layout.css` →
 renames (see that README) — this bench's dev server caches `/assets/` for
 12 hours, so editing in place wasn't enough even just for testing.
 
+## Per-user Theme Preferences
+
+A new **Theme Preference** doctype (`user` Link, unique + `app_color`,
+`primary_color`, `secondary_color`, `button_style`, `font_size`, `light_mode`
+— one record per user, created on first Save) plus a new desk **Page** at
+`/app/my-preferences` ("My Preferences", open to any logged-in user) with
+color swatches, button-style and font-size pickers, and live preview
+buttons. Per-user by design — each person sets their own, not an
+admin-controlled site-wide setting.
+
+**What's actually wired to take effect app-wide** (the rest — primary/
+secondary color, button style — are stored and shown in the page's own
+preview, but don't currently cascade elsewhere; say the word if you want
+those applied globally too, e.g. to form buttons):
+- **App Color** → the desk navbar background and every sidebar module icon
+  (`.sidebar-item-icon .icon-md`), overriding `spokes_app`'s navbar gradient
+  and icon color with a user-chosen solid color.
+- **Font Size** (Small/Medium/Large) → the desk navbar text and the content
+  font size on `/app/my-preferences` and the standard `/app/user-profile`
+  page specifically — not the whole desk.
+
+**How it works:**
+- `custom_theme/custom_theme/page/my_preferences/my_preferences.js` builds
+  the UI and calls two whitelisted methods on the doctype
+  (`get_my_preferences`/`save_my_preferences`, both scoped to
+  `frappe.session.user` server-side — a user can only ever read/write their
+  own record). Clicking a swatch/button applies live immediately (before
+  Save) by injecting a `<style id="custom-theme-preference-style">` tag and
+  toggling a `theme-font-{size}` class on `<body>`.
+- `utils.set_theme_preference_in_boot`, wired via the `boot_session` hook,
+  embeds the saved preference into
+  `frappe.boot.custom_theme_preference` on every page's boot. Unlike the
+  `app_logo_url` case documented above, a `boot_session` hook **is** safe
+  here — the ordering problem there was specific to a key `boot.py` itself
+  re-assigns later; an arbitrary new key like this one is never touched
+  again after `boot_session` runs.
+- `public/js/apply_theme_preference-v2.js` (loaded via `app_include_js`)
+  reads `frappe.boot.custom_theme_preference` and applies the same style
+  injection as the live-preview code, so a saved preference persists across
+  page loads and new sessions, not just while on the preferences page. It
+  polls for `frappe.boot` to exist rather than calling `frappe.ready()`
+  directly — `app_include_js` scripts aren't guaranteed to run after
+  Frappe's core bundle has defined `frappe.ready` yet, which is a real bug
+  that showed up in testing (`frappe.ready is not a function`).
+- **Critical, easy-to-miss step**: `frappe.boot` is cached **per-user** in
+  Redis (`frappe.cache.hget("bootinfo", user)`, one of the keys
+  `frappe.clear_cache(user=...)` clears). `save_my_preferences` calls
+  `frappe.clear_cache(user=frappe.session.user)` after saving — **without
+  this, the saved preference silently never appears on any other page load**
+  (confirmed by hitting exactly this bug during testing), since every
+  subsequent page keeps getting the pre-save cached bootinfo. If you ever
+  add another field/flow that changes this doctype outside
+  `save_my_preferences`, it needs the same cache-clear.
+
 ## Apply on a server
 
 If `custom_theme` is already installed as an app on the target bench:
@@ -131,6 +185,25 @@ If `custom_theme` is already installed as an app on the target bench:
    doctype table in one pass), then restart the bench web process so the new
    hooks and the monkeypatch (it only runs once, at process import) are
    loaded.
+8. For **Theme Preferences**: copy
+   `custom_theme/custom_theme/custom_theme/doctype/theme_preference/` into
+   `apps/custom_theme/custom_theme/custom_theme/doctype/`, and
+   `custom_theme/custom_theme/custom_theme/page/my_preferences/` into
+   `apps/custom_theme/custom_theme/custom_theme/page/` (create that `page/`
+   folder with an empty `__init__.py` if it doesn't already exist on the
+   target bench — see `custom_theme/custom_theme/custom_theme/page/__init__.py`
+   here).
+9. Copy `public/js/apply_theme_preference-v2.js` and
+   `public/css/theme_preference.css` into the target bench's matching
+   `apps/custom_theme/custom_theme/public/js/` and `.../public/css/`
+   folders.
+10. Add the `app_include_js` and `boot_session` hook lines, and the
+    `theme_preference.css` entry in `app_include_css`, from
+    `custom_theme/custom_theme/hooks.py` (see the copy here) into the target
+    bench's `hooks.py`.
+11. Run `bench --site <site> migrate` again (creates the `Theme Preference`
+    table and registers the `my-preferences` Page) and restart the web
+    process.
 
 If `custom_theme` is **not** installed as an app on the target bench (no
 need to install a new app just for this), run each patch directly via

@@ -28,8 +28,11 @@ app_license = "mit"
 app_include_css = [
 	"/assets/custom_theme/css/company_branding.css",
 	"/assets/custom_theme/css/desk_layout-v2.css",
+	"/assets/custom_theme/css/theme_preference.css",
 ]
-# app_include_js = "/assets/custom_theme/js/custom_theme.js"
+app_include_js = [
+	"/assets/custom_theme/js/apply_theme_preference-v2.js",
+]
 
 # include js, css files in header of web template
 web_include_css = [
@@ -206,6 +209,12 @@ web_include_css = [
 # of frappe.boot.get_app_logo), and browser favicon based on the current
 # company's Company Branding
 update_website_context = ["custom_theme.utils.update_website_context"]
+
+# Boot Session
+# ------------
+# embed the logged-in user's saved Theme Preference into frappe.boot for
+# apply_theme_preference-v2.js to apply on every page load
+boot_session = "custom_theme.utils.set_theme_preference_in_boot"
 
 # Request Events
 # ----------------
