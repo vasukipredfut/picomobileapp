@@ -62,3 +62,28 @@ def save_my_preferences(**kwargs):
 	frappe.clear_cache(user=user)
 
 	return {field: doc.get(field) for field in FIELDS}
+
+
+@frappe.whitelist()
+def get_my_profile():
+	user = frappe.get_doc("User", frappe.session.user)
+	roles = [r.role for r in user.roles if r.role not in ("All", "Guest")]
+	return {
+		"full_name": user.full_name,
+		"email": user.name,
+		"phone": user.phone,
+		"username": user.username or user.name,
+		"role": roles[0] if roles else user.user_type,
+	}
+
+
+@frappe.whitelist()
+def save_my_profile(full_name=None, phone=None):
+	user = frappe.get_doc("User", frappe.session.user)
+	if full_name is not None:
+		user.full_name = full_name
+	if phone is not None:
+		user.phone = phone
+	user.save(ignore_permissions=True)
+	frappe.db.commit()
+	return {"full_name": user.full_name, "phone": user.phone}

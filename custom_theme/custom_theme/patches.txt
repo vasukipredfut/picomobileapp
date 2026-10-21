@@ -7,3 +7,4 @@
 custom_theme.patches.setup_sidebar_menu
 custom_theme.patches.setup_company_dashboard
 custom_theme.patches.update_profile_navbar_link
+custom_theme.patches.setup_my_preferences_workspace

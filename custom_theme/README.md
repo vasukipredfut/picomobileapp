@@ -116,33 +116,78 @@ testing.
 
 ## Per-user Theme Preferences
 
-A new **Theme Preference** doctype (`user` Link, unique + `app_color`,
-`primary_color`, `secondary_color`, `button_style`, `font_size`, `light_mode`
-— one record per user, created on first Save) plus a new desk **Page** at
-`/app/my-preferences` ("My Preferences", open to any logged-in user) with
-color swatches, button-style and font-size pickers, and live preview
-buttons. Per-user by design — each person sets their own, not an
-admin-controlled site-wide setting.
+A **Theme Preference** doctype (`user` Link, unique + `app_color`,
+`primary_color`, `secondary_color`, `button_style`, `font_size`,
+`light_mode` — one record per user, created on first Save) backs a
+**My Preferences** desk page (reachable via the navbar's "My Profile" link
+— see `update_profile_navbar_link` above) with Profile Information fields
+(Full Name, Username, Email, Phone, Role), color swatches, button-style and
+font-size pickers, and live preview buttons. Per-user by design — each
+person sets their own, not an admin-controlled site-wide setting.
 
-**Page layout**: `frappe.ui.make_app_page()`'s `single_column` option is
-documented in Frappe's own source as *"whether to include sidebar"* —
-it was set to `true` when this page was first built, which is exactly what
-hid the desk's left navigation sidebar on this page while every other desk
-page showed it. Set to `false` so this page looks like the rest of the
-desk. The content block itself (`.my-preferences-page`) also now has
-`margin: 0 auto` to center it in the available width instead of sitting
-flush against the sidebar.
+**Architecture: a Workspace + Custom HTML Block, not a `frappe.ui.Page`.**
+The first implementation used a plain custom Page
+(`frappe.ui.make_app_page()`), which never showed the desk's left
+navigation sidebar — confirmed by checking Frappe's own source:
+`single_column` is documented there as *"whether to include sidebar"*, but
+even setting it to `false` only reveals an **empty** page-specific sidebar
+slot (meant for per-page content like List-view filters), not the actual
+workspace module tree — that tree only exists for genuine Workspace routes,
+built by `frappe.views.Workspace`, a completely different view class with
+no public API for reuse from a plain Page. The real fix: rebuild the whole
+feature as a Workspace containing a Custom HTML Block
+("My Preferences Panel") — the exact same mechanism the Home Dashboard's
+welcome banner already uses — which gets the full sidebar for free. The
+`setup_my_preferences_workspace` patch creates both records and deletes the
+old `Page: my-preferences` record so the two can't collide on the same
+route slug (a Workspace titled "My Preferences" slugifies to the identical
+`/app/my-preferences`, so the navbar link needed no change). The old Page's
+files are removed from this app entirely.
 
-**What's actually wired to take effect app-wide** (the rest — primary/
-secondary color, button style — are stored and shown in the page's own
-preview, but don't currently cascade elsewhere; say the word if you want
-those applied globally too, e.g. to form buttons):
-- **App Color** → the desk navbar background and every sidebar module icon
-  (`.sidebar-item-icon .icon-md`), overriding `spokes_app`'s navbar gradient
-  and icon color with a user-chosen solid color.
+Two real bugs surfaced while porting the UI into the Custom HTML Block's
+"script" field (which runs once against a `root_element` variable bound to
+the block's Shadow Root — see the welcome banner notes above for why it's
+a Shadow Root at all):
+- **`Workspace.content` is only layout, not a widget reference.** Setting
+  `doc.content` to the right JSON (matching the Home Dashboard's own
+  pattern exactly) rendered a completely empty workspace
+  (`codex-editor--empty`) until `doc.append("custom_blocks", {...})` also
+  registered the block in its own child table — `content` just says *where*
+  a widget goes, a separate child table (`custom_blocks`, `number_cards`,
+  etc., one per widget type) is what says *that it exists at all*. Also:
+  use `doc.append(fieldname, dict)`, not `doc.some_child_table.append(dict)`
+  directly — the latter appends a raw Python dict instead of a wrapped
+  child Document, which fails later with `AttributeError: 'dict' object has
+  no attribute 'is_new'`.
+- **`$(root_element).html(...)` is a silent no-op.** A `ShadowRoot`'s
+  `nodeType` is `11` (`DOCUMENT_FRAGMENT_NODE`), not `1` (`ELEMENT_NODE`).
+  jQuery's `.html()` *setter* only assigns `innerHTML` when
+  `elem.nodeType === 1` — on anything else it does nothing, with **no
+  error, no warning**, which is exactly what made this so slow to track
+  down (confirmed by inspecting jQuery's own source). Native
+  `root_element.innerHTML = htmlString` works fine, since `ShadowRoot`
+  genuinely does support `innerHTML` per spec — jQuery's abstraction just
+  doesn't check for it. Likewise `$(root_element).find(selector)` was
+  replaced with `root_element.querySelectorAll(selector)` throughout
+  (proactively, to rule out the same class of bug a second time) — though
+  wrapping the *individual matched elements* this returns in `$(el)` for
+  `.data()`/`.val()`/`.closest()` remains fine, since those are real
+  `nodeType === 1` elements, not the Shadow Root itself.
+
+**What's wired to take effect app-wide** (primary/secondary color and
+button style are stored and shown in the panel's own preview, but don't
+currently cascade elsewhere — say the word if you want those applied
+globally too, e.g. to form buttons):
+- **App Color** → the desk navbar background, every sidebar module icon
+  (`.sidebar-item-icon .icon-md`), and the Home Dashboard's welcome banner
+  (via the same Shadow-Root-reaching technique documented above).
 - **Font Size** (Small/Medium/Large) → the desk navbar text and the content
   font size on `/app/my-preferences` and the standard `/app/user-profile`
   page specifically — not the whole desk.
+- **Profile Information** (Full Name, Phone — Username/Email/Role are
+  read-only, pulled from the User doctype) saves via a separate
+  `save_my_profile` whitelisted method, independent of the color/font
+  preferences save.
 
 **How it works:**
 - `custom_theme/custom_theme/page/my_preferences/my_preferences.js` builds
@@ -265,23 +310,30 @@ If `custom_theme` is already installed as an app on the target bench:
    loaded.
 8. For **Theme Preferences**: copy
    `custom_theme/custom_theme/custom_theme/doctype/theme_preference/` into
-   `apps/custom_theme/custom_theme/custom_theme/doctype/`, and
-   `custom_theme/custom_theme/custom_theme/page/my_preferences/` into
-   `apps/custom_theme/custom_theme/custom_theme/page/` (create that `page/`
-   folder with an empty `__init__.py` if it doesn't already exist on the
-   target bench — see `custom_theme/custom_theme/custom_theme/page/__init__.py`
-   here).
-9. Copy `public/js/apply_theme_preference-v2.js` and
-   `public/css/theme_preference.css` into the target bench's matching
+   `apps/custom_theme/custom_theme/custom_theme/doctype/`.
+9. Copy the current `public/js/apply_theme_preference*.js` and
+   `public/css/theme_preference*.css` (check this repo's `hooks.py` for the
+   exact current filenames — both have been renamed for cache-busting, same
+   as everywhere else in this app) into the target bench's matching
    `apps/custom_theme/custom_theme/public/js/` and `.../public/css/`
    folders.
 10. Add the `app_include_js` and `boot_session` hook lines, and the
-    `theme_preference.css` entry in `app_include_css`, from
+    `theme_preference*.css` entry in `app_include_css`, from
     `custom_theme/custom_theme/hooks.py` (see the copy here) into the target
     bench's `hooks.py`.
-11. Run `bench --site <site> migrate` again (creates the `Theme Preference`
-    table and registers the `my-preferences` Page) and restart the web
-    process.
+11. Copy `custom_theme/custom_theme/patches/setup_my_preferences_workspace.py`
+    into `apps/custom_theme/custom_theme/patches/` on the target bench, and
+    add its line under `[post_model_sync]` in `patches.txt` (see the copy
+    here) — this creates the Workspace + Custom HTML Block the My
+    Preferences UI actually lives in, and deletes any old `Page:
+    my-preferences` record from an earlier version of this feature. **If
+    the target bench still has the old
+    `custom_theme/custom_theme/page/my_preferences/` files from an earlier
+    deploy, delete that folder** — they're dead code now, fully superseded.
+12. Run `bench --site <site> migrate` again (this is a genuinely new patch,
+    so a normal migrate runs it automatically — creates the
+    `Theme Preference` table, the `My Preferences` Workspace, and the
+    `My Preferences Panel` Custom HTML Block) and restart the web process.
 
 If `custom_theme` is **not** installed as an app on the target bench (no
 need to install a new app just for this), run each patch directly via
