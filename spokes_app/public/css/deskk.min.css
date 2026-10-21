@@ -1,0 +1,610 @@
+/* Sidebar styling */
+.page-sidebar {
+    background-color: #ffffff; /* was #404040 */
+    width: 200px; /* Sidebar width */
+}
+
+.page-sidebar .standard-sidebar-item {
+    color: #1f2937; /* was #ffffff */
+    font-size: 14px; /* Font size */
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* was rgba(255,255,255,0.1) */
+}
+
+.page-sidebar .standard-sidebar-item:hover {
+   /* background-color: #153c6a; /* Hover effect */
+   /* transition: 0.3s ease;*/
+    background-color: #f0f1f2 !important;
+    color: #1f2937 !important; /* was #ffffff */
+    transition: none !important; /* Disable any animation */
+}
+
+/* Sidebar icons */
+.page-sidebar .standard-sidebar-item i {
+    font-size: 20px;
+    margin-right: 15px;
+}
+
+/* Main page styling */
+.page-container {
+    background-color: #f5f5f5; /* Light gray background */
+    /* background: linear-gradient(to right, #58ace4, #1572b6);*/
+     /*border-bottom: 1px solid rgba(255, 255, 255, 0.3);*/
+}
+
+/* Top bar styling */
+.navbar {
+    /*background-color: #5a8bb5; /* Dark top bar */
+     background: linear-gradient(to right, #58ace4, #1572b6);
+     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+
+}
+
+.navbar navbar-expand {
+    background-color: #5a8bb5; /* Dark top bar */
+}
+.navbar .navbar-brand {
+    font-size: 18px;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.navbar .nav-link,
+.navbar .dropdown-toggle {
+    color: #ffffff;
+    font-size: 16px;
+}
+
+.navbar .nav-item .badge {
+    background-color: #e53935; /* Red notification badge */
+    font-size: 14px;
+    padding: 5px 10px;
+}
+
+/* Search bar */
+.navbar .form-control {
+    background-color: #ffffff;
+    color: #333;
+    border-radius: 5px;
+}
+
+/* User profile styling */
+.navbar .dropdown-user {
+    font-size: 16px;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+/* Fixing layout */
+.layout-main-section-wrapper {
+    padding: 30px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .page-sidebar {
+        width: 100%;
+    }
+
+    .page-sidebar .standard-sidebar-item {
+        text-align: center;
+}
+}
+.standard-sidebar-section.nested-container {
+    background-color: #ffffff !important;  /* was #404040 */
+    color: #1f2937 !important;  /* was #ffffff */
+}
+.standard-sidebar-section.nested-container {
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);  /* was rgba(255,255,255,0.3) */
+}
+.page-head.flex {
+   /* background-color: #5a8bb5 !important;  /* Lighter blue background */
+    color: #ffffff !important;  /* White text */
+     background: linear-gradient(to right, #58ace4, #1572b6);
+     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+
+}
+
+/* Ensure icons inside page-head are also white */
+.page-head.flex i {
+    color: #ffffff !important;  /* White icons */
+}
+
+/* Add padding for spacing */
+.page-head.flex {
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);  /* Subtle separator */
+}
+
+/* Styling for col-lg-2 layout-side-section */
+.col-lg-2.layout-side-section {
+    background-color: #ffffff !important; /* was #404040 */
+    color: #1f2937 !important; /* was #ffffff */
+    font-weight: bold !important; /* Bold text */
+    padding: 15px 20px; /* Add padding for spacing */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* was rgba(255,255,255,0.3) */
+}
+
+
+
+
+/* Ensure all text inside .standard-sidebar-section.nested-container is white */
+.standard-sidebar-section.nested-container {
+    color: #1f2937 !important; /* was white */
+}
+
+/* Ensure links inside .standard-sidebar-section.nested-container are also white */
+.standard-sidebar-section.nested-container a {
+color: #1f2937 !important; /* was white */
+}
+
+/* Ensure buttons inside .standard-sidebar-section.nested-container have white text */
+.standard-sidebar-section.nested-container button {
+    color: #1f2937 !important; /* was white */
+}
+
+li.disabled a {
+  color: black !important;
+}
+/* This will target any anchor inside a disabled li */
+li.disabled a {
+  color: black !important;
+}
+
+/* Targeting specifically inside the ERPNext navbar */
+body .navbar .nav .disabled a {
+  color: black !important;
+}
+
+/* Disable hover effect on modules */
+.module-card:hover {
+  background-color: #000000 !important; /* Disable background change */
+  box-shadow: none !important; /* Remove any shadow effect */
+  transform: none !important; /* Remove any transform effect */
+  cursor: default !important; /* Optionally, change cursor */
+}
+
+/* If there’s hover effect on text or icons inside module cards */
+.module-card:hover a, .module-card:hover .module-icon {
+  color: inherit !important; /* Remove color change on hover */
+}
+
+body .page-sidebar .standard-sidebar-item:hover,
+body .page-sidebar .standard-sidebar-item:focus,
+body .page-sidebar .standard-sidebar-item:active {
+    background-color: #f0f1f2 !important;  /* was #000000 */
+    color: #1f2937 !important;  /* was #ffffff */
+    transition: none !important;  /* Disable transition */
+    box-shadow: none !important;  /* Remove box shadow */
+    outline: none !important;  /* Remove outline */
+}
+
+/* Set the background color of the selected item to match the sidebar color */
+body .page-sidebar .standard-sidebar-item.selected,
+body .page-sidebar .desk-sidebar-item.selected {
+    background-color: #e8eef7 !important;  /* was #000000 - light blue highlight */
+    color: #1f2937 !important;  /* was #ffffff */
+    transition: none !important;  /* Disable transition (if needed) */
+    box-shadow: none !important;  /* Remove box shadow if present */
+}
+
+/* Ensure all SVG icons in ERPNext are white */
+.icon-md,
+.icon-md use {
+    fill: #ffffff !important;  /* White color for SVG icons */
+}
+
+/* Ensure all SVG icons in ERPNext are white */
+.icon-md,
+.icon-md use,
+.icon-md svg {
+    fill: #ffffff !important;  /* White color for SVG icons */
+}
+
+/* Ensure healthcare icon uses white stroke color */
+#icon-healthcare path {
+    stroke: #ffffff !important;  /* Set the stroke color to white */
+}
+
+body .page-sidebar .standard-sidebar-item.active {
+    background-color: #e8eef7 !important;  /* was #000000 */
+    color: #1f2937 !important;  /* was #ffffff */
+}
+
+/* Force white text for sidebar label */
+.page-sidebar li.sidebar-label,
+.page-sidebar li.sidebar-label * {
+    color: #1f2937 !important; /* was #ffffff */
+}
+.page-sidebar li.sidebar-label {
+    background-color: transparent !important; /* Ensure background does not hide text */
+    color: #1f2937 !important;  /* was #ffffff */
+}
+
+.item-anchor:hover {
+  background-color: #919692 !important;
+}
+.item-anchor:active {
+    background-color: rgb(156, 156, 153);
+
+  }
+  .created-by a {
+    color: white !important;
+}
+.flex.align-center.ellipsis a {
+    color: white !important;
+}
+/* Change font color to white for specific sidebar labels */
+.list-sidebar .sidebar-section .sidebar-label,
+.list-sidebar .add-group-by,
+.list-sidebar .show-tags a,
+.list-sidebar .saved-filters-preview {
+    color: white !important;
+}
+/* Change font color to white for sidebar elements */
+.form-sidebar .add-assignment-btn svg,
+.form-sidebar .add-attachment-btn svg,
+.form-sidebar .share-doc-btn svg,
+.form-sidebar .add-tags-btn svg,
+.form-sidebar .liked-by svg,
+.form-sidebar .like-count,
+.form-sidebar .comments svg,
+.form-sidebar .comments-count,
+.form-sidebar .form-follow,
+.form-sidebar .attachments-actions svg,
+.form-sidebar .show-all-btn svg,
+.form-sidebar .es-icon,
+.form-sidebar .follow-document-link,
+.form-sidebar .unfollow-document-link {
+    color: white !important;
+    fill: white !important;
+    stroke: white !important;
+}
+
+/* Change text color to white */
+.form-sidebar .modified-by,
+.form-sidebar .created-by,
+.form-sidebar .pill-label,
+.form-sidebar .sidebar-label,
+.form-sidebar .assignments,
+.form-sidebar .shares,
+.form-sidebar .followed-by-label {
+    color: white !important;
+}
+:root {
+    --icon-stroke: white !important;
+}
+.desk-sidebar-item.standard-sidebar-item.selected:hover {
+    background-color: #d7e3f3 !important; /* was #7e7d7b */
+}
+.sidebar-item-icon .icon-md {
+    fill: #1572b6 !important; /* was white */
+    stroke: #1572b6 !important; /* was white */
+}
+.sidebar-item-icon[item-icon="milestone"] .icon-md {
+    fill: #1572b6 !important; /* was white */
+    stroke: #1572b6 !important; /* was white */
+}
+.sidebar-item-icon .icon-md use {
+    color: #1572b6 !important; /* was white */
+}
+.icon-md {
+    fill: white !important;
+    stroke: white !important;
+}
+.icon-md use {
+    color: white !important;
+}
+/* Target the specific icon and change its color to white */
+.sidebar-item-icon svg use[href="#icon-milestone"] {
+    fill: #1572b6 !important; /* was white */
+    stroke: #1572b6 !important; /* was white */
+}
+
+/* Default hover and active states */
+.item-anchor:hover,
+.sidebar-item-control:hover {
+  background-color: #7e7d7b !important; /* Gray color */
+}
+
+.item-anchor:active,
+.sidebar-item-control:active {
+  background-color: #7e7d7b !important; /* Gray color */
+}
+
+/* Selected item background color */
+.desk-sidebar-item.selected .item-anchor,
+.desk-sidebar-item.selected .sidebar-item-control {
+  background-color: rgb(167, 167, 163) !important; /* Gray color */
+}
+/* Target the SVG icons inside the prev and next buttons */
+.text-muted .icon-btn svg use {
+    fill: black !important; /* Set icon color to black */
+}
+.desk-sidebar-item.standard-sidebar-item:hover {
+    background-color: grey;
+}
+.desk-sidebar-item.standard-sidebar-item:hover {
+    background-color: #d3d3d3; /* Light grey */
+}
+.sidebar-item:hover {
+    background-color: grey !important;
+    color: white !important; /* Optional: Change text color for better visibility */
+
+}
+.btn-reset.drop-icon.show-in-edit-mode:hover {
+    background-color: grey !important;
+    color: white !important; /* Optional: To change the text/icon color */
+}
+.desk-sidebar-item.standard-sidebar-item:has(.btn-secondary.btn-xs.drag-handle:focus),
+.desk-sidebar-item.standard-sidebar-item:has(.btn-secondary.btn-xs.drag-handle:hover),
+.desk-sidebar-item.standard-sidebar-item:focus-within {
+    background-color: grey !important;
+}
+/* Change Print Icon Color to Black */
+/* Change the heart icon to white */
+.like-icon use {
+    fill: white !important;
+}
+
+/* Alternatively, target the entire heart icon */
+.es-solid-heart path {
+    fill: white !important;
+}
+/* Change the print icon color to black */
+/* Change all icons with the .icon class to black */
+/* Change the fill color of the print icon to black */
+#icon-printer path {
+    fill: black !important;
+}
+/* Change the fill color of the menu button icon to black */
+#icon-dot-horizontal path {
+    fill: black !important;
+}
+/* Change the fill color of the previous button icon to black */
+#es-line-right-chevron path {
+    fill: black !important;
+}
+/* Change the fill color of the left-chevron icon to black */
+#es-line-left-chevron path {
+    fill: black !important;
+}
+/* Change the fill color of the reload icon to black */
+#es-line-reload path {
+    fill: black !important;
+}
+#icon-list path {
+    fill: black;
+}
+#icon-select path {
+    fill: black;
+}
+use[href="#es-small-close"] {
+    fill: black !important;
+}
+button.filter-x-button .filter-icon svg {
+    fill: black !important;
+}
+button.filter-x-button svg {
+    fill: black !important;
+}
+button.filter-x-button svg {
+    stroke: black !important;
+    fill: black !important;
+}
+.Union {
+    fill: black !important;
+    stroke: black !important;
+}
+path {
+    stroke: black !important;
+}
+.your-svg-class path {
+    stroke: black !important;
+}
+
+.pageview-count {
+    color: white;
+}
+a {
+    color: white;
+}
+.onboarding-steps-wrapper {
+    color: black;
+}
+
+.onboarding-steps-wrapper .step-text,
+.onboarding-steps-wrapper .step-title,
+.onboarding-steps-wrapper .step-skip {
+    color: black;
+}
+.onboarding-steps-wrapper {
+    color: black !important;
+}
+li[aria-selected="true"] a {
+    color: black !important;
+    font-weight: normal !important;
+}
+
+li[aria-selected="true"] a span {
+    color: black !important;
+}
+
+li[aria-selected="true"] a mark {
+    color: black !important;
+    background: none !important;
+}
+.search-bar .loading-text {
+    color: black !important;
+}
+.search-bar * {
+    color: black !important;
+}
+a.attached-file-link {
+    color: black !important;
+}
+.timeline-content a {
+    color: black !important;
+}
+
+.timeline-content .frappe-timestamp {
+    color: black !important;
+}
+
+.timeline-content {
+    color: black !important;
+}
+
+.std-form-layout * {
+    color: black !important;
+}
+.container.page-body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+}
+.standard-sidebar-section.nested-container {
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+}
+
+
+.btn-reset.drop-icon.show-in-edit-mode svg use {
+    fill: white !important;
+    stroke: white !important;
+}
+.btn-reset.drop-icon.show-in-edit-mode {
+    color: white !important;
+}
+
+.btn-reset.drop-icon.show-in-edit-mode svg {
+    fill: currentColor !important;
+    stroke: currentColor !important;
+}
+.btn-reset.drop-icon.show-in-edit-mode svg {
+    fill: white !important;
+    stroke: white !important;
+}
+
+.btn-reset.drop-icon.show-in-edit-mode svg use {
+    fill: white !important;
+    stroke: white !important;
+}
+.btn-reset.drop-icon.show-in-edit-mode {
+    color: white !important;
+}
+
+.btn-reset.drop-icon.show-in-edit-mode svg {
+    fill: currentColor !important;
+    stroke: currentColor !important;
+}
+.btn-reset.drop-icon.show-in-edit-mode svg {
+    filter: brightness(0) invert(1) !important;
+}
+
+
+
+
+.page-head.flex {
+    min-height: inherit !important;
+    height: auto !important;
+}
+.page-head.flex,
+header.navbar {
+    display: flex;
+    align-items: center;
+    height: 50px !important; /* Adjust this value to match the navbar height */
+}
+.page-head.flex {
+    height: 60px !important; /* Adjust based on actual navbar height */
+}
+
+.stat-label {
+    color: white !important;
+}
+
+.tree-label {
+    color: black !important;
+    text-decoration: none; /* Optional: Removes the underline */
+}
+.grey{
+    color: black !important;
+}
+.msgprint a {
+    color: black !important;
+    text-decoration: none; /* Optional: Removes underline */
+}
+a {
+    color: black !important;
+    text-decoration: none !important; /* Removes underline */
+}
+
+
+
+
+.icon-md {
+    width: 40px !important;
+    height: 40px !important;
+}
+.sidebar-item-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 18px !important; /* Increase font size */
+    font-weight: bold; /* Make text bold */
+}
+
+.layout-main-section-wrapper {
+    margin: 0 !important; /* Remove all margins */
+    padding: 0 !important; /* Remove any padding */
+/*    height: 40px !important; /* Same height as .icon-md (adjust if needed) */
+}
+.standard-sidebar-section.nested-container {
+    margin: 0 !important; /* Remove all margins */
+    padding: 0 !important; /* Remove any padding */
+}
+.page-head {
+/*    display: none !important; /* Hides the element */
+}
+button.standard-sidebar-label {
+    display: none !important;
+}
+
+.standard-sidebar-section.nested-container {
+/*    width: 80% !important; /* Reduce width by 20% */
+}
+
+
+.col-lg-2.layout-side-section {
+    height: 100vh !important; /* Full viewport height */
+/*    position: fixed !important; /* Fix it to the left side */
+    top: 0;
+    left: 0;
+    bottom: 0;
+    overflow-y: auto; /* Enable scrolling if content overflows */
+}
+.page-head.flex {
+    margin: 0 !important; /* Remove all margins */
+    border-bottom: 0 !important; /* Remove bottom border */
+}
+
+/* Employee Attendance Tool - Get Employees button */
+[data-fieldname="get_employees"] .btn,
+button[data-fieldname="get_employees"] {
+    background-color: white !important;
+    color: black !important;
+    border: 1px solid #d1d8dd !important;
+}
+
+[data-fieldname="get_employees"] .btn:hover,
+button[data-fieldname="get_employees"]:hover {
+    background-color: #f5f7fa !important;
+    color: black !important;
+}
