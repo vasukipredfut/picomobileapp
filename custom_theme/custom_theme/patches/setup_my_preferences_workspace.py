@@ -205,8 +205,15 @@ SCRIPT = """
 				args: state,
 				freeze: true,
 				callback: function () {
-					frappe.boot.custom_theme_preference = Object.assign({}, state);
 					frappe.show_alert({message: __("Preferences saved"), indicator: "green"});
+					// A full reload re-runs the normal boot_session flow from a
+					// clean page load, which is confirmed to apply every element
+					// (including the Shadow-DOM-nested welcome banner) correctly
+					// — simpler and more reliable than chasing in-place JS
+					// updates for every element a saved color needs to reach.
+					setTimeout(function () {
+						window.location.reload();
+					}, 800);
 				},
 			});
 		});

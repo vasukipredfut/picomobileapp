@@ -225,6 +225,22 @@ a Shadow Root at all):
   28px circles, and Frappe's own button styling (from that surviving
   `<link>` tag) applies correctly too.
 
+**Save Preferences triggers a full page reload** (`window.location.reload()`,
+after an 800ms delay so the "Preferences saved" toast is visible first) —
+not just the in-place `applyLive()` update. Reported live: after a swatch
+click + Save, the navbar changed immediately but the welcome banner stayed
+the old color until a *manual* reload. Despite `colorWelcomeBanner()`
+having its own `MutationObserver` to catch the banner's async-loading
+content (documented above), it apparently wasn't reliably winning that race
+in practice on the deployed server. Rather than keep chasing timing edge
+cases for one specific element, a reload after Save re-runs the entire
+normal `boot_session` → `apply_theme_preference-v4.js` flow from a clean
+page load, which is confirmed to apply every element correctly every time
+— simpler and more robust than guaranteeing an in-place JS update reaches
+every current and future themed element. Verified live: navbar and welcome
+banner both computed to the identical `rgb(67, 160, 71)` immediately after
+a Save-triggered reload, with no manual refresh.
+
 **What's wired to take effect app-wide** (primary/secondary color and
 button style are stored and shown in the panel's own preview, but don't
 currently cascade elsewhere — say the word if you want those applied
