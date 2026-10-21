@@ -182,12 +182,24 @@ shipped (a visibly two-toned header, and an unchanged welcome banner):
   one continuous bar instead of two visibly different-colored stacked
   layers — merely coloring the navbar was the original bug here, not a
   separate "merge" step.
-- `.pico-welcome-banner` — the Home Dashboard's welcome banner has its own
-  hardcoded gradient, but it's **not** in any CSS file: it's set via the
-  `style` field on its `Custom HTML Block` document
-  ("Pico Dashboard Welcome Banner") directly in the database. `!important`
-  on our rule is enough to win since that field's own rule doesn't use
-  `!important`.
+- `.pico-welcome-banner` (the Home Dashboard's welcome banner) — this one
+  took two attempts. Its markup/style come from a `Custom HTML Block`
+  document's `html`/`style` fields ("Pico Dashboard Welcome Banner") in the
+  DB, not any CSS file — but critically, **Frappe renders that block inside
+  an open Shadow DOM** (confirmed live:
+  `customEl.shadowRoot.mode === "open"`). A plain `.pico-welcome-banner
+  { background: ... !important }` rule in a page-level `<style>` tag — the
+  first thing tried — has **zero** effect here no matter how it's written:
+  Shadow DOM is intentionally style-isolated, and external CSS cannot cross
+  that boundary at all, `!important` or not. The actual fix:
+  `colorWelcomeBanner()` in `apply_theme_preference-v4.js` (and
+  `color_welcome_banner()` in `my_preferences.js`) finds the block's host
+  element, reaches into `host.shadowRoot`, and sets the inline style
+  directly on the banner element inside it
+  (`banner.style.setProperty("background", color, "important")`). Since the
+  block loads asynchronously (only present on workspaces that include it,
+  well after page boot), both wrap this in a `MutationObserver` watching for
+  the block to appear rather than assuming it's already there.
 
 **Logo made rectangular, not square** — `company_branding.css`'s
 `.app-logo` previously forced `width: 40px; height: 40px`, which
@@ -196,13 +208,14 @@ squished/cropped any non-square uploaded logo into a square. Changed to
 image's own real aspect ratio (verified live: a 1920×1080 test logo now
 renders at a proportional 71×40, not forced to 40×40).
 
-Renamed `company_branding.css` → `company_branding-v2.css` and
-`apply_theme_preference-v2.js` → `apply_theme_preference-v3.js` for the
-same cache-busting reason as every other file in this app — worth calling
-out specifically for `company_branding.css`, since it had kept its
-*original* filename this entire project, so this was the first time it
-ever needed a cache-bust, and the old 40×40-square version was still being
-served to any browser that had loaded it even once before.
+Renamed `company_branding.css` → `company_branding-v2.css` for the same
+cache-busting reason as every other file in this app — worth calling out
+specifically here, since it had kept its *original* filename this entire
+project, so this was the first time it ever needed a cache-bust, and the
+old 40×40-square version was still being served to any browser that had
+loaded it even once before. `apply_theme_preference.js` went through two
+more renames in this same round (`v2` → `v3` → `v4`) as the welcome-banner
+fix above was developed and corrected.
 
 ## Apply on a server
 

@@ -77,6 +77,25 @@ custom_theme.MyPreferences = class MyPreferences {
 		this.apply_live();
 	}
 
+	color_welcome_banner(color) {
+		// The welcome banner renders inside an OPEN SHADOW ROOT (Custom HTML
+		// Block "Pico Dashboard Welcome Banner"), which page-level CSS cannot
+		// reach at all regardless of specificity/!important — has to be set
+		// directly on the element inside the shadow root via JS. Won't be
+		// present on this page itself, but kept consistent with
+		// apply_theme_preference-v3.js in case this is ever reused elsewhere.
+		const containers = document.querySelectorAll(
+			'[custom_block_name="Pico Dashboard Welcome Banner"]'
+		);
+		containers.forEach((container) => {
+			const host = container.querySelector(".widget-body > *");
+			const banner = host && host.shadowRoot && host.shadowRoot.querySelector(".pico-welcome-banner");
+			if (banner) {
+				banner.style.setProperty("background", color, "important");
+			}
+		});
+	}
+
 	apply_live() {
 		// Same CSS this writes on every page load (apply_theme_preference.js) —
 		// duplicated here deliberately so a swatch click is felt instantly,
@@ -97,10 +116,8 @@ custom_theme.MyPreferences = class MyPreferences {
 				fill: ${this.state.app_color} !important;
 				stroke: ${this.state.app_color} !important;
 			}
-			.pico-welcome-banner {
-				background: ${this.state.app_color} !important;
-			}
 		`;
+		this.color_welcome_banner(this.state.app_color);
 
 		document.body.classList.remove("theme-font-small", "theme-font-medium", "theme-font-large");
 		document.body.classList.add("theme-font-" + this.state.font_size.toLowerCase());

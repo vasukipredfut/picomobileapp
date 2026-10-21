@@ -31,7 +31,7 @@ app_include_css = [
 	"/assets/custom_theme/css/theme_preference.css",
 ]
 app_include_js = [
-	"/assets/custom_theme/js/apply_theme_preference-v3.js",
+	"/assets/custom_theme/js/apply_theme_preference-v4.js",
 ]
 
 # include js, css files in header of web template
