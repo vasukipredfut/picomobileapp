@@ -1,0 +1,34 @@
+/* Full width by default — "full width" is otherwise only a per-browser
+   localStorage toggle (frappe.ui.toolbar.toggle_full_width), so this
+   reproduces its effect unconditionally instead of relying on every user
+   remembering to flip it. */
+body .container {
+	width: 90% !important;
+	max-width: 100% !important;
+}
+.page-container .page-body {
+	width: 100% !important;
+	max-width: 100% !important;
+}
+
+/* Sidebar: white background instead of the default dark one, with text kept
+   dark-on-white for contrast and icons recolored to match the top navbar
+   exactly (reuses --navbar-bg, the same variable the navbar itself uses). */
+.desk-sidebar,
+.standard-sidebar {
+	background-color: #ffffff !important;
+}
+
+.desk-sidebar .standard-sidebar-item .sidebar-item-label,
+.standard-sidebar .standard-sidebar-item .sidebar-item-label {
+	color: #1f2937 !important;
+}
+
+.desk-sidebar .standard-sidebar-item .sidebar-item-icon,
+.standard-sidebar .standard-sidebar-item .sidebar-item-icon {
+	color: var(--navbar-bg) !important;
+}
+.desk-sidebar .standard-sidebar-item .sidebar-item-icon svg,
+.standard-sidebar .standard-sidebar-item .sidebar-item-icon svg {
+	fill: currentColor !important;
+}

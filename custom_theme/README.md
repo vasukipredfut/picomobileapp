@@ -26,6 +26,21 @@ that collides with Frappe's built-in Dashboard DocType) with:
   stock ERPNext uses for "Annual Sales"/"Annual Purchase"); Customers is
   global since the Customer doctype has no simple top-level `company` field.
 
+**Making it the landing page:** clicking the navbar logo (or any bare `/app`
+hit) does **not** read any hook — it's pure client-side JS
+(`workspace.js get_page_to_show()`): it checks the **User** doctype's
+`default_workspace` field first, then `localStorage.current_page` (last
+visited), then whichever Workspace has the lowest `sequence_id`. So to make
+this dashboard the landing page for existing users, set that field directly
+rather than relying on `sequence_id` ordering:
+```python
+for u in frappe.get_all("User", filters={"user_type": "System User"}, pluck="name"):
+    frappe.db.set_value("User", u, "default_workspace", "<workspace name>")
+frappe.db.commit()
+```
+(Run via `bench console`. This only affects existing users — it does not
+apply automatically to a user created afterward.)
+
 ## Company Branding (per-company logo)
 
 A new `Company Branding` doctype (`company` Link, unique + `logo` Attach
@@ -64,6 +79,25 @@ unrestricted users (e.g. Guest visitors on the public website).
   actually reads as a logo instead of a postage stamp. Favicon size isn't
   adjustable this way — browsers always render a tab icon tiny regardless of
   the source image's dimensions.
+
+## Desk layout (full width + white sidebar)
+
+`public/css/desk_layout.css` (also loaded via `app_include_css` +
+`web_include_css`, alongside `company_branding.css` — both hooks are now
+lists):
+- **Full width by default** — "full width" is otherwise only a per-browser
+  `localStorage.container_fullwidth` toggle
+  (`frappe.ui.toolbar.toggle_full_width` in `toolbar.js`), so there's no
+  server-side "default" to flip; this reproduces the same effect
+  unconditionally (`.container { width: 90%; max-width: 100% }` /
+  `.page-body { width: 100%; max-width: 100% }`) instead.
+- **White sidebar** — forces `.desk-sidebar`/`.standard-sidebar` to a white
+  background with dark text, overriding whatever gave it a dark background
+  by default.
+- **Icon color matches the navbar exactly** — `.sidebar-item-icon` is set to
+  `var(--navbar-bg)`, the same CSS variable the top navbar itself uses for
+  its background, so it tracks the real configured navbar color rather than
+  a hardcoded guess.
 
 ## Apply on a server
 
