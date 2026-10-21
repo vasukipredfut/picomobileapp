@@ -608,3 +608,13 @@ button[data-fieldname="get_employees"]:hover {
     background-color: #f5f7fa !important;
     color: black !important;
 }
+
+/* Dropdown children (User, Employee, Leave Application, etc. nested under
+   a module like HR Module/Payroll Module) should read lighter than their
+   bold parent group label, not equally bold. */
+.sidebar-child-item .sidebar-item-label {
+    font-weight: 400 !important;
+}
+.sidebar-child-item .standard-sidebar-item {
+    font-weight: 400 !important;
+}
