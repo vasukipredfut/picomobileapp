@@ -28,7 +28,7 @@ app_license = "mit"
 app_include_css = [
 	"/assets/custom_theme/css/company_branding-v2.css",
 	"/assets/custom_theme/css/desk_layout-v3.css",
-	"/assets/custom_theme/css/theme_preference.css",
+	"/assets/custom_theme/css/theme_preference-v2.css",
 ]
 app_include_js = [
 	"/assets/custom_theme/js/apply_theme_preference-v4.js",

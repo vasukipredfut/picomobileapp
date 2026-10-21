@@ -25,6 +25,7 @@ body.theme-font-large [data-page-route="user-profile"] {
 /* My Preferences page layout */
 .my-preferences-page {
 	max-width: 650px;
+	margin: 0 auto;
 	padding: 20px;
 }
 .theme-pref-section h5 {

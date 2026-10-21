@@ -124,6 +124,15 @@ color swatches, button-style and font-size pickers, and live preview
 buttons. Per-user by design — each person sets their own, not an
 admin-controlled site-wide setting.
 
+**Page layout**: `frappe.ui.make_app_page()`'s `single_column` option is
+documented in Frappe's own source as *"whether to include sidebar"* —
+it was set to `true` when this page was first built, which is exactly what
+hid the desk's left navigation sidebar on this page while every other desk
+page showed it. Set to `false` so this page looks like the rest of the
+desk. The content block itself (`.my-preferences-page`) also now has
+`margin: 0 auto` to center it in the available width instead of sitting
+flush against the sidebar.
+
 **What's actually wired to take effect app-wide** (the rest — primary/
 secondary color, button style — are stored and shown in the page's own
 preview, but don't currently cascade elsewhere; say the word if you want

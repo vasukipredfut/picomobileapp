@@ -2,7 +2,7 @@ frappe.pages["my-preferences"].on_page_load = function (wrapper) {
 	const page = frappe.ui.make_app_page({
 		parent: wrapper,
 		title: "My Preferences",
-		single_column: true,
+		single_column: false, // single_column:true hides the desk sidebar — was wrong, this page should look like every other desk page
 	});
 
 	new custom_theme.MyPreferences(page);
