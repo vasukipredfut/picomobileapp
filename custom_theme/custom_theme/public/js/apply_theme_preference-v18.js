@@ -120,6 +120,56 @@
 		}, 100);
 	}
 
+	function ensureWorkspaceSidebarExists() {
+		// injectModuleTreeSidebar() below needs a real .desk-sidebar already in
+		// the DOM to clone from, which normally exists because Frappe keeps
+		// every visited page in the DOM (hidden, not destroyed) once a
+		// Workspace page has been shown this session. But a full page
+		// load/refresh landing DIRECTLY on a list or form URL never shows a
+		// Workspace page at all this session — confirmed live (.desk-sidebar
+		// simply doesn't exist anywhere after a fresh load straight into
+		// /app/employee), which is why the cloned sidebar disappeared on
+		// reload: there was nothing to clone.
+		//
+		// frappe.standard_pages["Workspaces"] is the exact function Frappe's
+		// own router calls the FIRST time the Workspaces page is needed — it
+		// creates the page and sidebar skeleton synchronously and populates it
+		// asynchronously, but critically does NOT navigate or display
+		// anything (confirmed live: calling it leaves frappe.get_route()
+		// unchanged and the new page's display stays "none"). Calling it here
+		// ourselves pre-warms the sidebar in the background. Frappe's router
+		// only ever calls this factory once per session (reusing
+		// frappe.pages["Workspaces"] afterward), so pre-warming it doesn't
+		// duplicate or conflict with a later real visit to the dashboard —
+		// confirmed live that navigating to Home Dashboard afterward still
+		// works normally and reuses the same pre-warmed page.
+		//
+		// One side effect to undo: calling it also overwrites document.title
+		// (confirmed live: it changed to "Workspace" even though nothing was
+		// actually navigated to), so the title is captured and restored
+		// around the call.
+		//
+		// Wrapped in try/catch: confirmed live that calling this factory
+		// out-of-band (not via a normal router-driven navigation) can throw
+		// deep inside Frappe's own Workspace constructor — TypeError: Cannot
+		// read properties of null (reading 'join'), on a fresh load straight
+		// into a list route, some route-dependent global state the
+		// constructor assumes isn't fully set up yet. An uncaught throw here
+		// aborted apply() entirely, silently breaking relocateLogo and
+		// injectModuleTreeSidebar's router.on("change") registration too —
+		// pre-warming is a nice-to-have and must never be able to take those
+		// down with it.
+		if (frappe.pages && frappe.pages["Workspaces"]) return; // already warmed (or really viewing it)
+		if (!frappe.standard_pages || typeof frappe.standard_pages["Workspaces"] !== "function") return;
+		const originalTitle = document.title;
+		try {
+			frappe.standard_pages["Workspaces"]();
+		} catch (e) {
+			// swallow — see comment above
+		}
+		document.title = originalTitle;
+	}
+
 	function injectModuleTreeSidebar() {
 		// List and form views replace the usual module-tree sidebar
 		// (.desk-sidebar) with their own .list-sidebar/.form-sidebar in the
@@ -141,7 +191,13 @@
 			if (!sidebar) return false;
 			if (sidebar.querySelector(".desk-sidebar")) return true; // real Workspace page
 			const original = document.querySelector(".desk-sidebar");
-			if (!original) return false; // no workspace visited yet this session
+			// ensureWorkspaceSidebarExists() creates .desk-sidebar's skeleton
+			// synchronously but populates its items asynchronously (fetched from
+			// the server) — confirmed live. Without checking for an actual item,
+			// a pre-warmed-but-not-yet-populated sidebar would get cloned empty,
+			// and since a success here stops the retry loop, that empty clone
+			// would be permanent.
+			if (!original || !original.querySelector(".sidebar-item-container")) return false;
 			const clone = original.cloneNode(true);
 			clone.classList.add("custom-theme-module-tree-clone");
 			sidebar.insertBefore(clone, sidebar.firstChild);
@@ -170,6 +226,7 @@
 	}
 
 	function apply() {
+		ensureWorkspaceSidebarExists();
 		relocateLogo();
 		injectModuleTreeSidebar();
 		frappe.router.on("change", function () {
