@@ -170,6 +170,28 @@
 		document.title = originalTitle;
 	}
 
+	function addClonedSidebarToggleHandler(clone) {
+		// Replaces the per-element click handler workspace.js binds to each
+		// .drop-icon (lost on clone — see the comment above tryInject() in
+		// injectModuleTreeSidebar for the full explanation) with one delegated
+		// handler on the clone's root, mirroring workspace.js's own
+		// add_drop_icon() logic: toggle the sibling .sidebar-child-item's
+		// "hidden" class, and flip the chevron's up/down icon to match.
+		clone.addEventListener("click", function (e) {
+			const dropIcon = e.target.closest(".drop-icon");
+			if (!dropIcon || !clone.contains(dropIcon)) return;
+			const itemContainer = dropIcon.closest(".sidebar-item-container");
+			const childSection = itemContainer && itemContainer.querySelector(".sidebar-child-item");
+			if (!childSection) return;
+			childSection.classList.toggle("hidden");
+			const use = dropIcon.querySelector("use");
+			if (use) {
+				const isNowCollapsed = childSection.classList.contains("hidden");
+				use.setAttribute("href", isNowCollapsed ? "#es-line-down" : "#es-line-up");
+			}
+		});
+	}
+
 	function injectModuleTreeSidebar() {
 		// List and form views replace the usual module-tree sidebar
 		// (.desk-sidebar) with their own .list-sidebar/.form-sidebar in the
@@ -182,9 +204,24 @@
 		// live), so the original .desk-sidebar is still in the DOM somewhere
 		// after the first workspace visit each session, even while viewing an
 		// unrelated list/form — cloning it live (rather than caching a copy)
-		// means it's never stale. Confirmed live that clicks on a cloned
-		// sidebar item work identically to the original (Frappe's sidebar
-		// click handling is delegated, not bound per-element).
+		// means it's never stale. Confirmed live that clicks on navigation
+		// links in a cloned sidebar item work identically to the original:
+		// they're real <a href> tags, and Frappe intercepts internal link
+		// clicks via a document-level delegated handler that doesn't care
+		// whether the clicked node is the "original" or a clone.
+		//
+		// The expand/collapse chevron (.drop-icon) is a DIFFERENT story,
+		// confirmed by reading workspace.js: Frappe binds its click handler
+		// directly to that specific button instance via $drop_icon.on("click",
+		// ...) — not delegated — and cloneNode(true) never copies JS event
+		// listeners, only DOM structure. So a cloned chevron looks identical
+		// but is completely inert. The children it should reveal ARE already
+		// in the clone's DOM (workspace.js builds every module's children
+		// upfront and only CSS-hides collapsed ones via a .hidden class on
+		// .sidebar-child-item — confirmed live, e.g. Payroll Module's 6
+		// children exist in the DOM even while collapsed) — there's just no
+		// listener left to toggle that class. addClonedSidebarToggleHandler()
+		// below replaces it with our own.
 		function tryInject() {
 			const activeContainer = getActivePageContainer();
 			const sidebar = activeContainer && activeContainer.querySelector(".list-sidebar, .form-sidebar");
@@ -200,6 +237,7 @@
 			if (!original || !original.querySelector(".sidebar-item-container")) return false;
 			const clone = original.cloneNode(true);
 			clone.classList.add("custom-theme-module-tree-clone");
+			addClonedSidebarToggleHandler(clone);
 			sidebar.insertBefore(clone, sidebar.firstChild);
 			return true;
 		}
