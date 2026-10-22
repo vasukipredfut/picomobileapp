@@ -149,6 +149,22 @@ li.nav-item:has(> [data-fieldname="connections_tab"]) {
 	margin-bottom: 10px;
 }
 
+/* The real .desk-sidebar always renders each item's drag-handle and "..."
+   settings/edit-workspace dropdown (.sidebar-item-control) — confirmed live
+   these are opacity:1/visible by default, not a hover-only reveal, for any
+   user who can edit workspaces. That's appropriate on the actual Workspace
+   page, where dragging reorders the real sidebar and "Edit Workspace" is a
+   real action. Inside a cloned copy neither does anything: dragging a clone
+   can't persist to the real workspace, and "Edit Workspace" from a List/Form
+   page's clone would be confusing at best. Hiding them here is what actually
+   makes the clone "look like the main home page" instead of messy — the
+   controls were always visible there too, so a user with edit permissions
+   only mentally edits them out of a workspace page; cloned next to dozens of
+   list/form items it reads as visual noise. */
+.custom-theme-module-tree-clone .sidebar-item-control {
+	display: none !important;
+}
+
 /* The logo starts inside .navbar (its original server-rendered position)
    and apply_theme_preference-v8.js only moves it out once frappe.boot is
    ready — hiding it here prevents a brief flash in the old spot during that

@@ -93,7 +93,21 @@
 			return true;
 		}
 
-		if (tryRelocate()) return;
+		// Always poll — never check once synchronously and return early on
+		// success. router.js's render_page() hands a route off to its async
+		// view factory (FormFactory, ListFactory, ...) via factory.show()
+		// WITHOUT awaiting it, then fires "change" immediately after,
+		// confirmed live: at that exact instant getActivePageContainer() can
+		// still resolve to a stale page left over from BEFORE this
+		// navigation. An immediate synchronous check run right there can hit
+		// that stale page, find it ALREADY relocated (from a previous visit),
+		// and wrongly report "nothing to do" — confirmed live this happened
+		// whenever a Form route followed an already-fixed List route,
+		// silently stranding the logo on the old page forever, since nothing
+		// else would ever re-check. Always entering the poll loop instead
+		// means every tick freshly re-resolves the active container via
+		// tryRelocate() itself, so it naturally converges once the real page
+		// is ready, however many ticks that takes — typically just one.
 		let tries = 0;
 		const iv = setInterval(function () {
 			tries += 1;
@@ -134,18 +148,23 @@
 			return true;
 		}
 
-		if (tryInject()) return;
-
-		// .list-sidebar/.form-sidebar are rebuilt asynchronously after the
-		// route change event fires, and form views specifically fetch the
-		// full document over the network before rendering — confirmed live
-		// that a 2s budget (20 tries) was too short for a Form route and
-		// silently gave up before .form-sidebar even existed. 100 tries
-		// (~10s) matches the budget already used for the outer frappe.boot
-		// wait.
+		// Always poll — never check once synchronously and return early on
+		// success. Same race as relocateLogo() above: an immediate check can
+		// hit a stale page left over from before this navigation and wrongly
+		// read its OWN already-injected clone as "this route needs nothing" —
+		// confirmed live this silently stranded the module tree off the real
+		// new page whenever a Form route followed an already-fixed List
+		// route. tryInject() re-resolves the active container fresh on every
+		// tick, so always polling converges correctly regardless of how many
+		// ticks the real page takes to become ready.
 		let tries = 0;
 		const iv = setInterval(function () {
 			tries += 1;
+			// Form views fetch the full document over the network before
+			// rendering — confirmed live that a 2s budget (20 tries) was too
+			// short and silently gave up before .form-sidebar even existed.
+			// 100 tries (~10s) matches the budget already used for the outer
+			// frappe.boot wait.
 			if (tryInject() || tries > 100) clearInterval(iv);
 		}, 100);
 	}
@@ -153,36 +172,9 @@
 	function apply() {
 		relocateLogo();
 		injectModuleTreeSidebar();
-
 		frappe.router.on("change", function () {
-			// router.js's render_page() hands off to an async view factory
-			// (FormFactory, ListFactory, ...) via factory.show() WITHOUT
-			// awaiting it, then fires "change" immediately after — confirmed
-			// live (frappe.container.page still pointed at the OLD page at the
-			// instant "change" fired for a Form route, only updating once the
-			// factory's own async setup, e.g. the document fetch, finished).
-			// Checking DOM visibility (or even frappe.container.page) straight
-			// away is unreliable: it can resolve to a stale page left over
-			// from BEFORE this navigation — confirmed live this caused
-			// relocateLogo/injectModuleTreeSidebar to silently treat an
-			// unrelated, already-handled page as "nothing to do" when
-			// navigating straight from a Workspace into a Form, rather than
-			// ever reaching the new page. Waiting for frappe.container.page
-			// (Frappe's own authoritative current-page pointer) to actually
-			// become a different node sidesteps guessing at each factory's
-			// timing: once it changes, the new page is confirmed current.
-			const staleContainer = frappe.container && frappe.container.page;
-			let tries = 0;
-			const iv = setInterval(function () {
-				tries += 1;
-				const current = frappe.container && frappe.container.page;
-				const settled = current && current !== staleContainer;
-				if (settled || tries > 100) {
-					clearInterval(iv);
-					relocateLogo();
-					injectModuleTreeSidebar();
-				}
-			}, 100);
+			relocateLogo();
+			injectModuleTreeSidebar();
 		});
 
 		const pref = frappe.boot && frappe.boot.custom_theme_preference;
