@@ -247,6 +247,16 @@ li.nav-item:has(> [data-fieldname="connections_tab"]) {
 	display: list-item !important;
 }
 
+/* Comments box + Activity feed (New Email/New Event buttons, the edit
+   history log) at the bottom of every document form. Confirmed live:
+   .after-save is the single wrapper around both .comment-box and
+   .new-timeline on every doctype (checked Employee and User) — one rule
+   removes the whole section instead of targeting comment box and timeline
+   separately. */
+.after-save {
+	display: none !important;
+}
+
 /* The logo starts inside .navbar (its original server-rendered position)
    and apply_theme_preference-v8.js only moves it out once frappe.boot is
    ready — hiding it here prevents a brief flash in the old spot during that
