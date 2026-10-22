@@ -69,8 +69,45 @@
 		}
 	}
 
+	function injectHomeLink() {
+		// List and form views replace the usual module-tree sidebar
+		// (.desk-sidebar) with their own .list-sidebar/.form-sidebar in the
+		// same column — confirmed live: .desk-sidebar doesn't exist in the DOM
+		// at all on those routes. Once desk_layout CSS hides the Assigned
+		// To/Tags/Share clutter in those sidebars, there'd be no way back to
+		// the dashboard without browser back, so add one explicitly.
+		function tryInject() {
+			const sidebar = document.querySelector(".list-sidebar, .form-sidebar");
+			if (!sidebar || sidebar.querySelector(".custom-theme-home-link")) return false;
+			const link = document.createElement("a");
+			link.className = "custom-theme-home-link";
+			link.href = "/app/home-dashboard";
+			link.textContent = "Home";
+			link.addEventListener("click", function (e) {
+				e.preventDefault();
+				frappe.set_route("home-dashboard");
+			});
+			sidebar.insertBefore(link, sidebar.firstChild);
+			return true;
+		}
+
+		if (tryInject()) return;
+
+		// .list-sidebar/.form-sidebar are rebuilt asynchronously after the
+		// route change event fires (confirmed: a bare call right after
+		// frappe.router's "change" event routinely finds neither sidebar yet),
+		// so poll briefly rather than assuming it's already rendered.
+		let tries = 0;
+		const iv = setInterval(function () {
+			tries += 1;
+			if (tryInject() || tries > 20) clearInterval(iv); // ~2s
+		}, 100);
+	}
+
 	function apply() {
 		applyPageHeadLogo();
+		injectHomeLink();
+		frappe.router.on("change", injectHomeLink);
 
 		const pref = frappe.boot && frappe.boot.custom_theme_preference;
 		if (!pref) return;

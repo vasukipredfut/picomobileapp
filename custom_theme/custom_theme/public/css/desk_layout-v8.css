@@ -89,6 +89,59 @@ body .container {
 	background-position: left center;
 }
 
+/* Declutter list and form views, across every doctype — these are all
+   framework-level structural classes Frappe reuses for every doctype's list
+   and form (not per-doctype markup), so one rule here covers all of them.
+
+   List view: .list-sidebar's .filter-section is the "Assigned To" /
+   "Created By" / "Tags" / "Edit Filters" block. */
+.list-sidebar .filter-section {
+	display: none !important;
+}
+
+/* Form view: the Assigned To, Tags, Share rows, and the like+comment icon
+   row (.form-sidebar-stats bundles both into one "0 · 0" line). */
+.form-sidebar .form-assignments,
+.form-sidebar .form-tags,
+.form-sidebar .form-shared,
+.form-sidebar .form-sidebar-stats {
+	display: none !important;
+}
+
+/* The "Connections" tab Frappe auto-adds to every doctype with incoming
+   Link fields. data-fieldname="connections_tab" is the same literal value
+   on every doctype (only the tab's #id prefix varies, e.g.
+   "employee-connections_tab" vs "customer-connections_tab"), so both the
+   tab button and its [id$="-connections_tab"] content pane can be matched
+   doctype-agnostically. */
+li.nav-item:has(> [data-fieldname="connections_tab"]) {
+	display: none !important;
+}
+.tab-content [id$="-connections_tab"] {
+	display: none !important;
+}
+
+/* List/form views replace the usual module-tree sidebar (.desk-sidebar)
+   with their own .list-sidebar/.form-sidebar in the same column — so with
+   the filter/assignment clutter above hidden, there'd be no way back to the
+   dashboard without using browser back. apply_theme_preference-v7.js
+   injects a single "Home" link as the first child of whichever sidebar is
+   present; this just styles it to look like a sidebar entry. */
+.custom-theme-home-link {
+	display: flex;
+	align-items: center;
+	padding: 10px 15px;
+	font-weight: bold;
+	font-size: 14px;
+	color: #1f2937;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+	cursor: pointer;
+	text-decoration: none;
+}
+.custom-theme-home-link:hover {
+	background-color: #f0f1f2;
+}
+
 /* The logo now shows in the page-head row instead — hiding it here removes
    the now-empty-looking strip of whitespace it left behind in the navbar. */
 .navbar .navbar-brand {
