@@ -62,31 +62,39 @@ body .container {
 /* Move the company logo from the top navbar row into the page-head row, in
    front of the sidebar-toggle (hamburger) button and the page title — so
    the logo and "Home Dashboard" read as one row instead of two stacked
-   bars. .page-title is already display:flex (Frappe's own page.html), so a
-   ::before pseudo-element becomes a flex item and naturally renders before
-   its first real child (.sidebar-toggle-btn) with no extra positioning.
-   --page-head-logo is set once at boot by apply_theme_preference-v6.js from
-   frappe.boot.app_logo_url (the same per-company logo already shown in the
-   navbar) and persists across client-side route changes since .page-title
-   inherits it from the root element.
+   bars.
+
+   This is the REAL <a class="navbar-brand navbar-home" href="/app"> node
+   (containing the <img class="app-logo">), physically relocated by
+   apply_theme_preference-v8.js — not a CSS-only fake. A plain
+   background-image on a ::before pseudo-element (the previous approach)
+   can't be clicked, and re-implementing "go to the user's default
+   workspace, else Home" ourselves would just be duplicating logic Frappe
+   already has: href="/app" with no further path already resolves through
+   frappe.router.make_url()'s documented order (User's default workspace ->
+   private home -> public home -> first workspace) — confirmed by reading
+   router.js. Moving the real element keeps that resolution AND Frappe's
+   existing internal-link click interception for free, with no reimplementation.
 
    Sized 40px tall to match the sidebar-toggle button's own 40x40 box
    (confirmed via getBoundingClientRect) so the two read as the same visual
    scale, but wider (64px) rather than a 40x40 square — most uploaded
-   company logos are wider than tall, and background-size:contain would
-   otherwise shrink a wide logo down to fit a square box, making it look
-   smaller than the hamburger icon next to it despite the box itself being
-   the same height. */
-.page-title::before {
-	content: "";
+   company logos are wider than tall, and a square box would otherwise
+   shrink a wide logo down, making it look smaller than the hamburger icon
+   next to it despite equal box height. */
+.page-title > .navbar-brand.navbar-home {
+	display: flex !important;
+	align-items: center;
+	justify-content: flex-start;
 	width: 64px;
 	height: 40px;
 	margin-right: 10px;
 	flex-shrink: 0;
-	background-image: var(--page-head-logo, none);
-	background-size: contain;
-	background-repeat: no-repeat;
-	background-position: left center;
+}
+.page-title > .navbar-brand.navbar-home .app-logo {
+	max-width: 100%;
+	max-height: 100%;
+	object-fit: contain;
 }
 
 /* Declutter list and form views, across every doctype — these are all
@@ -122,28 +130,32 @@ li.nav-item:has(> [data-fieldname="connections_tab"]) {
 }
 
 /* List/form views replace the usual module-tree sidebar (.desk-sidebar)
-   with their own .list-sidebar/.form-sidebar in the same column — so with
-   the filter/assignment clutter above hidden, there'd be no way back to the
-   dashboard without using browser back. apply_theme_preference-v7.js
-   injects a single "Home" link as the first child of whichever sidebar is
-   present; this just styles it to look like a sidebar entry. */
-.custom-theme-home-link {
-	display: flex;
-	align-items: center;
-	padding: 10px 15px;
-	font-weight: bold;
-	font-size: 14px;
-	color: #1f2937;
+   entirely with their own .list-sidebar/.form-sidebar in the same column —
+   confirmed live that .desk-sidebar doesn't exist in that page's DOM at
+   all. So with the filter/assignment clutter above hidden, there'd be
+   nothing left to navigate with except browser back. A single "Home" link
+   wasn't enough ("I want the mentioned menus to be there always"), so
+   apply_theme_preference-v8.js instead clones the real .desk-sidebar
+   (Frappe persists hidden pages rather than destroying them, so the
+   original is always still in the DOM somewhere after the first workspace
+   visit each session) and inserts the clone as the first child of whichever
+   sidebar is present. Confirmed live that clicks on a cloned sidebar item —
+   both plain navigation links and the expand/collapse chevrons — work
+   identically to the original: Frappe's sidebar click handling is bound via
+   delegation, not per-element, so it doesn't care whether the clicked node
+   is the "original" or a clone. */
+.custom-theme-module-tree-clone {
 	border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-	cursor: pointer;
-	text-decoration: none;
-}
-.custom-theme-home-link:hover {
-	background-color: #f0f1f2;
+	margin-bottom: 10px;
 }
 
-/* The logo now shows in the page-head row instead — hiding it here removes
-   the now-empty-looking strip of whitespace it left behind in the navbar. */
+/* The logo starts inside .navbar (its original server-rendered position)
+   and apply_theme_preference-v8.js only moves it out once frappe.boot is
+   ready — hiding it here prevents a brief flash in the old spot during that
+   gap. Once JS moves the node into .page-title it's no longer a descendant
+   of .navbar, so this selector stops matching it and this rule becomes
+   inert — no conflict with the relocated element's own visible styling
+   above. */
 .navbar .navbar-brand {
 	display: none !important;
 }
