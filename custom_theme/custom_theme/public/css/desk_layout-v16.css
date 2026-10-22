@@ -132,6 +132,19 @@ li.nav-item:has(> [data-fieldname="connections_tab"]) {
 	display: none !important;
 }
 
+/* Some doctypes (confirmed live: Shift Type) don't have enough tabs for
+   Frappe to render Connections as its own tab at all — instead it renders
+   as a standalone collapsible "Connections" section (.form-links, a
+   core/generic Frappe class from form_dashboard.js's render_links(), not
+   doctype-specific markup) sitting above the form fields. The
+   tab/[data-fieldname="connections_tab"] rule above doesn't match this
+   different rendering, which is why it was still visible there — this
+   covers that second case so Connections is hidden regardless of which of
+   the two ways a given doctype happens to render it. */
+.form-links {
+	display: none !important;
+}
+
 /* List/form views replace the usual module-tree sidebar (.desk-sidebar)
    entirely with their own .list-sidebar/.form-sidebar in the same column —
    confirmed live that .desk-sidebar doesn't exist in that page's DOM at
@@ -265,5 +278,18 @@ li.nav-item:has(> [data-fieldname="connections_tab"]) {
    inert — no conflict with the relocated element's own visible styling
    above. */
 .navbar .navbar-brand {
+	display: none !important;
+}
+
+/* Shift Type's form-only custom buttons ("Shift Tools" dropdown — Shift
+   Assignment Tool / Roster — and "Mark Attendance"), added by Shift Type's
+   own client script via frm.add_custom_button(), not a generic Frappe
+   feature. Scoped to this one doctype's Form page specifically
+   (confirmed live: a Form route's page-container's data-page-route is just
+   the doctype name, e.g. "Shift Type"), unlike the other rules in this file
+   — the user asked to remove these FOR Shift Type, not for every doctype's
+   custom buttons generally (which would strip real functionality other
+   doctypes rely on, e.g. GL/Payroll processing buttons). */
+.page-container[data-page-route="Shift Type"] .custom-actions {
 	display: none !important;
 }
