@@ -195,6 +195,38 @@ li.nav-item:has(> [data-fieldname="connections_tab"]) {
 	flex: 1;
 }
 
+/* A "Duplicate Workspace" button (.duplicate-page, es-line-duplicate icon)
+   appears next to EVERY sidebar item instead of the drag-handle/settings
+   button we already hide — confirmed by reading workspace.js's
+   add_sidebar_actions(): it renders .duplicate-page instead of
+   .drag-handle/.setting-btn specifically when item.is_editable is false,
+   i.e. for any user without Workspace Manager permissions (this app's local
+   dev/Administrator test account IS a manager, which is why this control
+   wasn't caught by the drag-handle/setting-btn rule above — only reproduced
+   once checked against a non-manager account). Same reasoning as the other
+   sidebar-item-control rules: this duplicates nothing useful from inside a
+   cloned, non-canonical copy of the sidebar. */
+.custom-theme-module-tree-clone .duplicate-page {
+	display: none !important;
+}
+
+/* List view's top-right toolbar — the "List View" view-switcher dropdown,
+   reload icon, and "..." menu. Scoped to ":has(.custom-btn-group)" (the
+   view-switcher dropdown, confirmed live to exist ONLY on true List routes
+   — absent on both Form routes and the Workspace/Home Dashboard page, even
+   though those also contain .page-icon-group/.menu-btn-group of their own)
+   so this only ever fires on a genuine list view, never removing a
+   document's own menu (Delete/Print/Duplicate/Assign, which live in the
+   same .menu-btn-group class on Form routes) or anything on the dashboard.
+   Deliberately leaves .primary-action (the "Add X" button) alone — it's a
+   sibling of .page-icon-group/.menu-btn-group inside .standard-actions, not
+   nested inside either, so it's unaffected by these two selectors. */
+.page-container:has(.custom-btn-group) .custom-actions,
+.page-container:has(.custom-btn-group) .page-icon-group,
+.page-container:has(.custom-btn-group) .menu-btn-group {
+	display: none !important;
+}
+
 /* The logo starts inside .navbar (its original server-rendered position)
    and apply_theme_preference-v8.js only moves it out once frappe.boot is
    ready — hiding it here prevents a brief flash in the old spot during that
