@@ -107,11 +107,14 @@ body .container {
 	display: none !important;
 }
 
-/* Form view: the Assigned To, Tags, Share rows, and the like+comment icon
-   row (.form-sidebar-stats bundles both into one "0 · 0" line). */
+/* Form view: the Assigned To, Tags, Share, Attachments rows, and the
+   like+comment icon row (.form-sidebar-stats bundles both into one "0 · 0"
+   line). .form-attachments is the attachment-pill-list + "+" add-attachment
+   button pair shown next to the record's avatar. */
 .form-sidebar .form-assignments,
 .form-sidebar .form-tags,
 .form-sidebar .form-shared,
+.form-sidebar .form-attachments,
 .form-sidebar .form-sidebar-stats {
 	display: none !important;
 }
@@ -225,6 +228,23 @@ li.nav-item:has(> [data-fieldname="connections_tab"]) {
 .page-container:has(.custom-btn-group) .page-icon-group,
 .page-container:has(.custom-btn-group) .menu-btn-group {
 	display: none !important;
+}
+
+/* Form view's own "..." menu — trim to just Reload and Delete, across every
+   doctype. Confirmed live: every item's actual label lives on a nested
+   <span class="menu-item-label" data-label="..."> (the same encoding used
+   for Report/Dashboard/Kanban view-switcher items earlier in this file),
+   with the literal value "Reload"/"Delete" identical for every doctype —
+   everything else varies per doctype (custom items like "Permissions > Set
+   User Permissions" on User, "Edit DocType", "New X", etc.), which is
+   exactly why a blanket hide-all-then-allowlist-two approach generalizes
+   here instead of listing out every possible label to remove. */
+.menu-btn-group .dropdown-menu > li {
+	display: none !important;
+}
+.menu-btn-group .dropdown-menu > li:has(> .dropdown-item > .menu-item-label[data-label="Reload"]),
+.menu-btn-group .dropdown-menu > li:has(> .dropdown-item > .menu-item-label[data-label="Delete"]) {
+	display: list-item !important;
 }
 
 /* The logo starts inside .navbar (its original server-rendered position)
