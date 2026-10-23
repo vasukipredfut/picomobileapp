@@ -120,6 +120,69 @@
 		}, 100);
 	}
 
+	function relocateNavbarExtras() {
+		// Merges the two stacked blue bars into one, per request: "make the A
+		// [avatar] ... to second layer where logo and three dots [hamburger]
+		// are ... make that 1 layer top bar and remove top layer". Same
+		// technique as relocateLogo() above — physically move the REAL
+		// elements rather than cloning or reimplementing them, so search
+		// (Ctrl+G), notifications, and the avatar dropdown all keep working
+		// exactly as before, just in a new spot.
+		//
+		// .navbar's .collapse.navbar-collapse is one single div that already
+		// contains the search bar, the (CSS-hidden) notification bell, AND
+		// the avatar dropdown together — confirmed live — so moving that one
+		// element brings all three at once instead of needing three separate
+		// relocations.
+		//
+		// #navbar-breadcrumbs (a sibling of .collapse.navbar-collapse, also
+		// inside .navbar) is NOT relocated — confirmed live it does get
+		// populated with real content on Form routes (e.g. "Employee >
+		// HR-EMP-00001"), but with the page title itself already hidden
+		// elsewhere in this app's styling, a lone breadcrumb trail with
+		// nothing to sit next to would look orphaned; desk_layout CSS hides
+		// it outright instead, which is also what lets .navbar end up fully
+		// empty and safe to hide once this function has run.
+		function tryRelocate() {
+			// NOT scoped to ".navbar .collapse..." — confirmed live that once
+			// the first relocation succeeds, this element lives inside a
+			// .page-actions, no longer a descendant of .navbar at all, so an
+			// ancestor-scoped selector only ever finds it ONCE and silently
+			// matches nothing on every later route change (the same mistake,
+			// inverted, as the .list-sidebar/.form-sidebar scoping bug fixed
+			// earlier in this file) — stranding it on whichever page happened
+			// to be active the first time this function ran. The element
+			// itself is a page-wide singleton, so matching it directly (like
+			// a.navbar-brand.navbar-home above) works regardless of its
+			// current parent.
+			const collapse = document.querySelector(".collapse.navbar-collapse");
+			if (!collapse) return false;
+			const activeContainer = getActivePageContainer();
+			const pageActions = activeContainer && activeContainer.querySelector(".page-actions");
+			if (!pageActions) return false;
+			if (pageActions.lastElementChild !== collapse) {
+				pageActions.appendChild(collapse);
+			}
+			// desk_layout CSS only hides .navbar when this class is present —
+			// confirming the move actually happened before hiding the original
+			// location, so a failure here (rather than unconditionally hiding
+			// .navbar) just leaves the old two-bar layout in place instead of
+			// losing search/account access with nothing left to show it.
+			document.body.classList.add("navbar-extras-relocated");
+			return true;
+		}
+
+		// Always poll, never check-once-and-return — same reasoning as
+		// relocateLogo()/injectModuleTreeSidebar() above: an immediate
+		// synchronous check right after a route change can still see a stale
+		// page left over from before the navigation.
+		let tries = 0;
+		const iv = setInterval(function () {
+			tries += 1;
+			if (tryRelocate() || tries > 100) clearInterval(iv);
+		}, 100);
+	}
+
 	function ensureWorkspaceSidebarExists() {
 		// injectModuleTreeSidebar() below needs a real .desk-sidebar already in
 		// the DOM to clone from, which normally exists because Frappe keeps
@@ -266,9 +329,11 @@
 	function apply() {
 		ensureWorkspaceSidebarExists();
 		relocateLogo();
+		relocateNavbarExtras();
 		injectModuleTreeSidebar();
 		frappe.router.on("change", function () {
 			relocateLogo();
+			relocateNavbarExtras();
 			injectModuleTreeSidebar();
 		});
 

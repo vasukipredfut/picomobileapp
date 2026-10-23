@@ -321,3 +321,29 @@ li.nav-item:has(> [data-fieldname="connections_tab"]) {
 .page-container[data-page-route="Shift Type"] .custom-actions {
 	display: none !important;
 }
+
+/* Merge the navbar + page-head bars into one visible layer. JS
+   (apply_theme_preference-v20.js's relocateNavbarExtras) physically moves
+   the real search bar / notifications / avatar dropdown element out of
+   .navbar into the page-head row's .page-actions, and #navbar-breadcrumbs
+   is deliberately left behind rather than also relocated (see that
+   function's comment — with the page title already hidden, a lone
+   breadcrumb trail would have nothing to sit next to), so it's hidden here
+   instead. */
+#navbar-breadcrumbs {
+	display: none !important;
+}
+
+/* .navbar is only hidden once relocateNavbarExtras() has CONFIRMED its
+   content actually moved (it adds body.navbar-extras-relocated only after
+   that succeeds) — not unconditionally. Unlike the small, low-stakes logo,
+   .navbar is where search (Ctrl+G) and the avatar/account menu live; if the
+   relocation JS ever failed for some reason (this app has already hit a
+   couple of genuine Frappe-internal edge cases this project, e.g. the
+   Workspace pre-warm throwing on a cold load), unconditionally hiding
+   .navbar would take real functionality down with no fallback. Gating on
+   the confirmation class means a JS failure just leaves the two-bar layout
+   in place instead of losing search/account access entirely. */
+body.navbar-extras-relocated .navbar {
+	display: none !important;
+}
