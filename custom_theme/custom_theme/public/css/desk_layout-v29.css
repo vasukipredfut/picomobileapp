@@ -365,6 +365,20 @@ li.nav-item:has(> [data-fieldname="connections_tab"]) {
 	display: none !important;
 }
 
+/* Payroll Entry's form-only custom button ("Make Bank Entry" /
+   "Release Withheld Salaries"), added by Payroll Entry's own client script
+   (hrms/payroll/doctype/payroll_entry/payroll_entry.js add_bank_entry_button
+   -> frm.add_custom_button), not a generic Frappe feature. Scoped to this
+   one doctype's Form page specifically, same pattern as Shift
+   Type/User/Leave Allocation/Salary Component/Salary Structure above.
+   Request referred to this as "Salary Structure Assignment" but the
+   screenshot provided was actually a Payroll Entry form (URL
+   /app/payroll-entry/..., breadcrumb "Payroll Entry") — scoped to the
+   doctype shown, not the one named. */
+.page-container[data-page-route="Payroll Entry"] .custom-actions {
+	display: none !important;
+}
+
 /* The "..." menu button itself, removed outright for every doctype's form
    (superseding the earlier Reload/Delete allowlist further up this file —
    that rule is now moot since its parent is hidden here, but left in place
