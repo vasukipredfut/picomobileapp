@@ -31,7 +31,7 @@ app_include_css = [
 	"/assets/custom_theme/css/theme_preference-v2.css",
 ]
 app_include_js = [
-	"/assets/custom_theme/js/apply_theme_preference-v23.js",
+	"/assets/custom_theme/js/apply_theme_preference-v25.js",
 ]
 
 # include js, css files in header of web template
@@ -212,9 +212,12 @@ update_website_context = ["custom_theme.utils.update_website_context"]
 
 # Boot Session
 # ------------
-# embed the logged-in user's saved Theme Preference into frappe.boot for
-# apply_theme_preference-v2.js to apply on every page load
-boot_session = "custom_theme.utils.set_theme_preference_in_boot"
+# embed the logged-in user's saved Theme Preference, and their Company, into
+# frappe.boot for apply_theme_preference-v2.js to use on every page load
+boot_session = [
+	"custom_theme.utils.set_theme_preference_in_boot",
+	"custom_theme.utils.set_current_company_in_boot",
+]
 
 # Request Events
 # ----------------

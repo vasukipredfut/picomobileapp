@@ -58,3 +58,19 @@ def set_theme_preference_in_boot(bootinfo):
 
 	doc = frappe.get_cached_doc("Theme Preference", user)
 	bootinfo.custom_theme_preference = {field: doc.get(field) for field in FIELDS}
+
+
+def set_current_company_in_boot(bootinfo):
+	"""boot_session hook: embed the logged-in user's Company (via
+	get_current_company()'s User Permission lookup, the same source of truth
+	used everywhere else in this app) into bootinfo, so the sidebar Report
+	shortcuts added in setup_sidebar_menu.py can pre-fill their company
+	filter with the value this app actually considers "current" — not
+	frappe.defaults.get_user_default("Company")/erpnext.get_default_company(),
+	which do NOT reflect a Company User Permission at all (see
+	get_current_company()'s own docstring). A separate boot_session entry
+	(registered as a list in hooks.py) rather than folded into
+	set_theme_preference_in_boot above, since that function returns early for
+	any user without a saved Theme Preference — most users won't have one,
+	and this needs to run for all of them."""
+	bootinfo.custom_theme_current_company = get_current_company()

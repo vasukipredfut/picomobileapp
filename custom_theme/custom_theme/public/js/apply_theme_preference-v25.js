@@ -487,6 +487,147 @@
 		observer.observe(document.body, { childList: true, subtree: true });
 	}
 
+	// Sidebar entries added by custom_theme.patches.setup_sidebar_menu's
+	// "reports" MODULES key (Employee Checkin/Attendance/Leave
+	// Application/Leave Balance under HR Module, Customer/Lead under Sales
+	// Module). Each is backed by a real Workspace + Shortcut so it appears in
+	// frappe.boot.allowed_workspaces like any other sidebar child — but
+	// workspace.js's own sidebar builder can only link a child item to a bare
+	// /app/<slug> route (it builds href from frappe.router.slug(item.title),
+	// completely ignoring the shortcut's own type/link_to — confirmed by
+	// reading sidebar_item_container() in workspace.js). That happens to work
+	// for plain DocType entries because their title IS the doctype's own
+	// route slug, but a named Report has no single-segment route of its own
+	// (a Report Builder report lives at List/<doctype>/Report/<name>, a
+	// Script/Query Report at query-report/<name> — confirmed live for both).
+	// So these entries' real navigation is handled entirely by this file via
+	// a capture-phase click interceptor, keyed by the sidebar item's visible
+	// label text (each of these 6 labels is unique across the whole sidebar,
+	// so no parent-module disambiguation is needed).
+	const REPORT_SIDEBAR_LINKS = [
+		{ label: "Employee Checkin", kind: "report-builder", doctype: "Employee Checkin", report: "Employee Checkin", companyField: null },
+		{ label: "Attendance", kind: "report-builder", doctype: "Attendance", report: "Attendance", companyField: "company" },
+		{ label: "Leave Application", kind: "report-builder", doctype: "Leave Application", report: "Leave Application", companyField: "company" },
+		{ label: "Leave Balance", kind: "query-report", report: "Employee Leave Balance", companyField: "company" },
+		// Customer has no companyField: confirmed reading customer.json — it
+		// carries no direct Link-to-Company field at all (only "companies", a
+		// multi-company "Allowed To Transact With" child table, and
+		// "represents_company" which only applies to internal customers), so
+		// there's no single field to pre-fill a company default into.
+		{ label: "Customer", kind: "report-builder", doctype: "Customer", report: "Customer", companyField: null },
+		{ label: "Lead", kind: "report-builder", doctype: "Lead", report: "Lead", companyField: "company" },
+	];
+
+	function routeForReportLink(cfg) {
+		return cfg.kind === "query-report" ? ["query-report", cfg.report] : ["List", cfg.doctype, "Report", cfg.report];
+	}
+
+	function matchReportLinkForRoute(route) {
+		return REPORT_SIDEBAR_LINKS.find((cfg) => {
+			const target = routeForReportLink(cfg);
+			return target.length === route.length && target.every((part, i) => part === route[i]);
+		});
+	}
+
+	function setupReportSidebarLinks() {
+		// Capture phase + confined to the sidebar: only ever acts on clicks
+		// inside .list-sidebar/.form-sidebar (the module tree lives there,
+		// cloned or fallback alike — see injectModuleTreeSidebar above), never
+		// on coincidentally-matching text anywhere else on the page.
+		document.addEventListener(
+			"click",
+			function (e) {
+				const sidebar = e.target.closest(".list-sidebar, .form-sidebar");
+				if (!sidebar) return;
+				const anchor = e.target.closest(".item-anchor");
+				if (!anchor) return;
+				const labelEl = anchor.querySelector(".sidebar-item-label");
+				const label = labelEl ? labelEl.textContent.trim() : "";
+				const cfg = REPORT_SIDEBAR_LINKS.find((c) => c.label === label);
+				if (!cfg) return;
+				e.preventDefault();
+				e.stopPropagation();
+				frappe.set_route.apply(frappe, routeForReportLink(cfg));
+			},
+			true
+		);
+
+		// One-shot per fresh navigation, not reactive to every DOM mutation —
+		// deliberately NOT wired into watchForInPlaceRefresh()'s
+		// MutationObserver above, which would re-apply (fighting) the filter
+		// on every keystroke/filter edit the user makes on the page, turning
+		// a "convenience default" into something that looks like it can't be
+		// removed. Confirmed live that changing/adding a list filter does NOT
+		// fire frappe.router.on("change") (filter_area.add() on an existing
+		// list leaves frappe.get_route() and location unchanged), so gating on
+		// route-change alone is sufficient to apply it exactly once per visit
+		// without re-fighting the user's own edits afterward.
+		let lastAutoFilledRoute = null;
+		frappe.router.on("change", function () {
+			const route = frappe.get_route();
+			const routeStr = route.join("/");
+			if (routeStr === lastAutoFilledRoute) return;
+			const cfg = matchReportLinkForRoute(route);
+			if (!cfg || !cfg.companyField) return;
+			const company = frappe.boot && frappe.boot.custom_theme_current_company;
+			if (!company) return;
+			lastAutoFilledRoute = routeStr;
+
+			let tries = 0;
+			let filterAddInFlight = false;
+			const iv = setInterval(function () {
+				tries += 1;
+				// Re-check we're still on the route we started this poll for —
+				// same race as relocateLogo()/tryInject() elsewhere in this
+				// file: the user could navigate away before cur_list/
+				// frappe.query_report finish loading for this one.
+				if (frappe.get_route().join("/") !== routeStr) {
+					clearInterval(iv);
+					return;
+				}
+				if (
+					cfg.kind === "report-builder" &&
+					window.cur_list &&
+					cur_list.doctype === cfg.doctype &&
+					cur_list.filter_area &&
+					!filterAddInFlight
+				) {
+					// .add() can still reject with "Filter missing" even after the
+					// filter_area/doctype readiness check above — confirmed live,
+					// the filter row's input widget isn't necessarily rendered yet
+					// at that exact instant. Retried on the next tick rather than
+					// giving up after one attempt (NOT clearing the interval here),
+					// relying on the tries>50 cap below as the ultimate backstop —
+					// this is a best-effort convenience default, not something
+					// that should surface as an uncaught console error, but
+					// silently never applying it on the first transient failure
+					// would be worse than retrying a few times.
+					filterAddInFlight = true;
+					cur_list.filter_area
+						.add([[cfg.doctype, cfg.companyField, "=", company]])
+						.then(function () {
+							clearInterval(iv);
+						})
+						.catch(function () {
+							filterAddInFlight = false;
+						});
+					return;
+				}
+				if (
+					cfg.kind === "query-report" &&
+					frappe.query_report &&
+					frappe.query_report.report_name === cfg.report &&
+					frappe.query_report.filters
+				) {
+					frappe.query_report.set_filter_value(cfg.companyField, company);
+					clearInterval(iv);
+					return;
+				}
+				if (tries > 50) clearInterval(iv); // ~5s — give up rather than poll forever
+			}, 100);
+		});
+	}
+
 	function apply() {
 		ensureWorkspaceSidebarExists();
 		relocateLogo();
@@ -498,6 +639,7 @@
 			injectModuleTreeSidebar();
 		});
 		watchForInPlaceRefresh();
+		setupReportSidebarLinks();
 
 		const pref = frappe.boot && frappe.boot.custom_theme_preference;
 		if (!pref) return;
