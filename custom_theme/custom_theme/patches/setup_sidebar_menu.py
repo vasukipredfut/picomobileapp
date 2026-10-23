@@ -18,10 +18,14 @@ MODULES = [
 			"Holiday List",
 		],
 		"reports": [
-			# {"ref_doctype": ...} creates (and upserts) a new Report Builder
-			# report named after the doctype. A plain string instead links to
-			# an existing Report by that exact name (its Report Builder/Query/
-			# Script type is read from the DB, not assumed here).
+			# Each entry links to an EXISTING Report by name (Script/Query
+			# Report with its own filters + computed columns — not a Report
+			# Builder/saved-list-view, which looks too similar to the plain
+			# doctype list it's replacing). "Employee Checkin Report",
+			# "Leave Application Report" are custom_theme's own
+			# (custom_theme/custom_theme/report/...); "Shift Attendance" and
+			# "Employee Leave Balance" are hrms's own built-in reports,
+			# reused as-is rather than duplicating their logic.
 			#
 			# label is "<Doctype> Report", not the bare doctype name: this
 			# Workspace's title IS that label (see ensure_report_workspace),
@@ -34,9 +38,9 @@ MODULES = [
 			# first insert there. Sidestepped by using a title that's never
 			# going to collide with a real doctype name, instead of fighting
 			# that framework-level check.
-			{"ref_doctype": "Employee Checkin", "label": "Employee Checkin Report"},
-			{"ref_doctype": "Attendance", "label": "Attendance Report"},
-			{"ref_doctype": "Leave Application", "label": "Leave Application Report"},
+			{"report_name": "Employee Checkin Report", "label": "Employee Checkin Report"},
+			{"report_name": "Shift Attendance", "label": "Attendance Report"},
+			{"report_name": "Leave Application Report", "label": "Leave Application Report"},
 			{"report_name": "Employee Leave Balance", "label": "Leave Balance"},
 		],
 	},
@@ -68,8 +72,11 @@ MODULES = [
 		"reports": [
 			# See the comment on HR Module's "reports" above for why these are
 			# titled "<Doctype> Report" rather than the bare doctype name.
-			{"ref_doctype": "Customer", "label": "Customer Report"},
-			{"ref_doctype": "Lead", "label": "Lead Report"},
+			# "Customer Report" is custom_theme's own
+			# (custom_theme/custom_theme/report/...); "Lead Details" is
+			# erpnext's own built-in report, reused as-is.
+			{"report_name": "Customer Report", "label": "Customer Report"},
+			{"report_name": "Lead Details", "label": "Lead Report"},
 		],
 	},
 	{
@@ -114,8 +121,7 @@ def execute():
 			doctype, _ = normalize_doctype_entry(entry)
 			wanted_labels.add(f"{module['title']} - {doctype}")
 		for entry in report_entries:
-			report_key = entry.get("ref_doctype") or entry["report_name"]
-			wanted_labels.add(f"{module['title']} - {report_key} Report")
+			wanted_labels.add(f"{module['title']} - {entry['report_name']} Report")
 		remove_stale_doctype_workspaces(module["title"], wanted_labels)
 
 		for idx, entry in enumerate(module["doctypes"]):
@@ -236,35 +242,17 @@ def ensure_doctype_workspace(parent_name, module_title, entry, idx):
 	doc.save(ignore_permissions=True)
 
 
-def ensure_report_builder_report(ref_doctype):
-	"""Upsert a plain Report Builder report for ref_doctype, named after the
-	doctype itself. Report Builder = a saved List View (standard filter
-	sidebar, date-range/name search and all, same as the plain DocType
-	shortcuts above already gave) — not a Script Report, so no custom
-	columns/query code is needed here; the per-user company default is
-	applied client-side on top (apply_theme_preference.js), since Report
-	Builder filters stored in this doc's json are static, not evaluated
-	per-viewer."""
-	if frappe.db.exists("Report", ref_doctype):
-		return ref_doctype
-
-	doc = frappe.new_doc("Report")
-	doc.report_name = ref_doctype
-	doc.ref_doctype = ref_doctype
-	doc.report_type = "Report Builder"
-	doc.is_standard = "No"
-	doc.module = frappe.get_meta(ref_doctype).module
-	doc.insert(ignore_permissions=True)
-	return doc.name
-
-
 def ensure_report_workspace(parent_name, module_title, entry, idx):
 	"""Sidebar counterpart to ensure_doctype_workspace() above, but for a
-	Report instead of a plain DocType list. Two entry shapes:
-	{"ref_doctype": ..., "label": ...} creates (idempotently) a new Report
-	Builder report for that doctype; {"report_name": ..., "label": ...}
-	links to an already-existing Report (e.g. hrms's built-in "Employee
-	Leave Balance" Script Report) without creating anything.
+	Report instead of a plain DocType list. entry is {"report_name": ...,
+	"label": ...}, linking to an ALREADY-EXISTING Report — either one of
+	custom_theme's own (custom_theme/custom_theme/report/...) or a built-in
+	one from erpnext/hrms (e.g. "Shift Attendance", "Lead Details",
+	"Employee Leave Balance") — reused as-is rather than duplicating its
+	query/column logic. Never creates a Report Builder (= a saved list view)
+	here: that looked too similar to the plain doctype list it was meant to
+	replace, so every entry now points to a real Script/Query Report with
+	its own purpose-built filters and computed columns.
 
 	Frappe's own sidebar tree can only link a child item to a bare
 	/app/<slug> route (workspace.js's sidebar_item_container() builds
@@ -278,32 +266,21 @@ def ensure_report_workspace(parent_name, module_title, entry, idx):
 	to exist regardless: it's what makes the item appear at all in
 	frappe.boot.allowed_workspaces, which both the real sidebar clone and
 	our fallback tree render from."""
-	ref_doctype = entry.get("ref_doctype")
+	report_name = entry["report_name"]
 	display_label = entry["label"]
 
-	if ref_doctype:
-		if not frappe.db.exists("DocType", ref_doctype):
-			frappe.log_error(
-				title="setup_sidebar_menu",
-				message=f"Skipped report sidebar entry for missing DocType: {ref_doctype} (module: {module_title})",
-			)
-			return
-		report_name = ensure_report_builder_report(ref_doctype)
-	else:
-		report_name = entry["report_name"]
-		if not frappe.db.exists("Report", report_name):
-			frappe.log_error(
-				title="setup_sidebar_menu",
-				message=f"Skipped report sidebar entry for missing Report: {report_name} (module: {module_title})",
-			)
-			return
+	if not frappe.db.exists("Report", report_name):
+		frappe.log_error(
+			title="setup_sidebar_menu",
+			message=f"Skipped report sidebar entry for missing Report: {report_name} (module: {module_title})",
+		)
+		return
 
-	report_key = ref_doctype or report_name
 	# " Report" suffix keeps this distinct from ensure_doctype_workspace()'s
 	# "{module_title} - {doctype}" naming, so a doctype entry and a report
 	# entry for the same underlying doctype (as happened with Lead, replaced
 	# by its report here) can never collide on the same Workspace name.
-	internal_label = f"{module_title} - {report_key} Report"
+	internal_label = f"{module_title} - {report_name} Report"
 
 	shortcut_id = frappe.generate_hash(length=10)
 

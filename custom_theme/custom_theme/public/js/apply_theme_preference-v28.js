@@ -509,25 +509,31 @@
 	// version rejects a first-time Workspace insert whose title slug matches
 	// any existing DocType name (confirmed live), so the underlying Workspace
 	// (and therefore the visible sidebar text, which is driven by the same
-	// title field) had to be named distinctly from the doctype itself. report
-	// stays the bare doctype name since that's still the real Report
-	// document's own name (ensure_report_builder_report never renamed that).
+	// title field) had to be named distinctly from the doctype itself.
+	// "report" is each entry's REAL underlying Report name — distinct from
+	// "label" (the sidebar's visible text) for the two reused vendor reports,
+	// since "Shift Attendance"/"Lead Details" are what they're actually
+	// called, not "Attendance Report"/"Lead Report". Every entry is a real
+	// Script/Query Report, routed at query-report/<name> — no more "Report
+	// Builder" (a saved list view), which looked too similar to the plain
+	// doctype list it was replacing, per explicit feedback.
 	const REPORT_SIDEBAR_LINKS = [
-		{ label: "Employee Checkin Report", kind: "report-builder", doctype: "Employee Checkin", report: "Employee Checkin", companyField: null },
-		{ label: "Attendance Report", kind: "report-builder", doctype: "Attendance", report: "Attendance", companyField: "company" },
-		{ label: "Leave Application Report", kind: "report-builder", doctype: "Leave Application", report: "Leave Application", companyField: "company" },
-		{ label: "Leave Balance", kind: "query-report", report: "Employee Leave Balance", companyField: "company" },
+		{ label: "Employee Checkin Report", report: "Employee Checkin Report", companyField: "company" },
+		{ label: "Attendance Report", report: "Shift Attendance", companyField: "company" },
+		{ label: "Leave Application Report", report: "Leave Application Report", companyField: "company" },
+		{ label: "Leave Balance", report: "Employee Leave Balance", companyField: "company" },
 		// Customer has no companyField: confirmed reading customer.json — it
 		// carries no direct Link-to-Company field at all (only "companies", a
 		// multi-company "Allowed To Transact With" child table, and
 		// "represents_company" which only applies to internal customers), so
-		// there's no single field to pre-fill a company default into.
-		{ label: "Customer Report", kind: "report-builder", doctype: "Customer", report: "Customer", companyField: null },
-		{ label: "Lead Report", kind: "report-builder", doctype: "Lead", report: "Lead", companyField: "company" },
+		// there's no single field to pre-fill a company default into. Our own
+		// Customer Report's filters reflect this (no company filter at all).
+		{ label: "Customer Report", report: "Customer Report", companyField: null },
+		{ label: "Lead Report", report: "Lead Details", companyField: "company" },
 	];
 
 	function routeForReportLink(cfg) {
-		return cfg.kind === "query-report" ? ["query-report", cfg.report] : ["List", cfg.doctype, "Report", cfg.report];
+		return ["query-report", cfg.report];
 	}
 
 	function matchReportLinkForRoute(route) {
@@ -582,50 +588,31 @@
 			lastAutoFilledRoute = routeStr;
 
 			let tries = 0;
-			let filterAddInFlight = false;
 			const iv = setInterval(function () {
 				tries += 1;
 				// Re-check we're still on the route we started this poll for —
 				// same race as relocateLogo()/tryInject() elsewhere in this
-				// file: the user could navigate away before cur_list/
-				// frappe.query_report finish loading for this one.
+				// file: the user could navigate away before frappe.query_report
+				// finishes loading for this one.
 				if (frappe.get_route().join("/") !== routeStr) {
 					clearInterval(iv);
 					return;
 				}
+				// Checking frappe.query_report.filters (just the array) isn't
+				// enough — confirmed live that set_filter_value() still throws
+				// ("Cannot read properties of undefined (reading 'set_value')")
+				// when the specific named filter's own Field object
+				// (get_filter(fieldname)) hasn't been constructed yet, even
+				// though .filters itself already exists at that point.
+				// get_filter() logs its own console.warn on a miss, so the
+				// `.length` check comes first purely to avoid spamming that on
+				// every single poll tick before the array is even populated.
 				if (
-					cfg.kind === "report-builder" &&
-					window.cur_list &&
-					cur_list.doctype === cfg.doctype &&
-					cur_list.filter_area &&
-					!filterAddInFlight
-				) {
-					// .add() can still reject with "Filter missing" even after the
-					// filter_area/doctype readiness check above — confirmed live,
-					// the filter row's input widget isn't necessarily rendered yet
-					// at that exact instant. Retried on the next tick rather than
-					// giving up after one attempt (NOT clearing the interval here),
-					// relying on the tries>50 cap below as the ultimate backstop —
-					// this is a best-effort convenience default, not something
-					// that should surface as an uncaught console error, but
-					// silently never applying it on the first transient failure
-					// would be worse than retrying a few times.
-					filterAddInFlight = true;
-					cur_list.filter_area
-						.add([[cfg.doctype, cfg.companyField, "=", company]])
-						.then(function () {
-							clearInterval(iv);
-						})
-						.catch(function () {
-							filterAddInFlight = false;
-						});
-					return;
-				}
-				if (
-					cfg.kind === "query-report" &&
 					frappe.query_report &&
 					frappe.query_report.report_name === cfg.report &&
-					frappe.query_report.filters
+					frappe.query_report.filters &&
+					frappe.query_report.filters.length &&
+					frappe.query_report.get_filter(cfg.companyField)
 				) {
 					frappe.query_report.set_filter_value(cfg.companyField, company);
 					clearInterval(iv);
