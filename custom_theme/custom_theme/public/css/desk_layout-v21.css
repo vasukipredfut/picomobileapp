@@ -347,3 +347,45 @@ li.nav-item:has(> [data-fieldname="connections_tab"]) {
 body.navbar-extras-relocated .navbar {
 	display: none !important;
 }
+
+/* The relocated element itself is Bootstrap's .collapse class, which is
+   display:none by default — it was only ever visible inside .navbar because
+   of a navbar-specific responsive override (.navbar-collapse forced to
+   display:flex at wider viewports). Confirmed live: once moved into
+   .page-actions, that override no longer applies (it's scoped to a .navbar
+   ancestor this element no longer has), so the ENTIRE relocated block —
+   search bar, notifications, and the avatar dropdown together — silently
+   computed back to display:none, with nothing visibly broken to point at
+   since there was no error, just an invisible element. Re-asserting
+   display:flex here, scoped to wherever this file's JS actually puts it
+   (.page-actions), restores the layout without depending on Bootstrap's
+   .navbar-scoped rule. */
+.page-actions .collapse.navbar-collapse {
+	display: flex !important;
+}
+
+/* .page-head.flex is "position: sticky; top: var(--navbar-height)" (48px)
+   in Frappe's own CSS — calibrated to stick right below .navbar's own
+   height while scrolling. Confirmed live this became stale once .navbar is
+   hidden: position:sticky's offset only affects where the element RENDERS,
+   not the space it reserves in the normal document flow (which is based on
+   its natural, un-stuck position) — so with .navbar's height now 0,
+   page-head kept rendering 48px lower than the flow space it reserves, and
+   the main content below (which starts right after that reserved space)
+   ended up visually overlapping the bottom ~48px of the page-head bar.
+   Overriding just the "top" offset (sticky position kept) does NOT fix
+   this, even with higher specificity and !important confirmed via
+   document.styleSheets — tried several ways, including a freshly injected
+   <style> tag, and getBoundingClientRect() kept reporting the stale 48px
+   every time. Only changing "position" itself away from sticky (confirmed
+   live: "static" recalculates and renders at the correct offset
+   immediately) actually takes effect, pointing to a sticky-position
+   constraint-rect caching quirk rather than an ordinary cascade/specificity
+   problem. Dropping sticky behavior here is an acceptable trade — the
+   page-head bar no longer stays pinned while scrolling — in exchange for
+   reliably fixing a real, confirmed visual overlap bug, scoped to only
+   apply once the navbar merge is confirmed
+   (body.navbar-extras-relocated). */
+body.navbar-extras-relocated .page-head.flex {
+	position: static !important;
+}
