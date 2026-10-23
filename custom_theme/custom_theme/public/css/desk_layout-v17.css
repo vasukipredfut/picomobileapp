@@ -97,6 +97,34 @@ body .container {
 	object-fit: contain;
 }
 
+/* Hide the page title text ("Home Dashboard", etc.) next to the relocated
+   logo + sidebar-toggle button — the row should show just those two,
+   matching the reference layout, not the current page's name. .title-area
+   is the wrapper Frappe's page.html uses for the title text, the
+   indicator pill next to it, and the "more" overflow button; hiding the
+   whole wrapper removes all three together. */
+.page-title .title-area {
+	display: none !important;
+}
+
+/* Flush the logo + sidebar-toggle button to the true left edge of the page
+   head bar, matching the reference layout, instead of sitting ~80px in.
+   Root-caused via getBoundingClientRect(): .page-head .container is a
+   Bootstrap .container, which centers itself with automatic left/right
+   margins (confirmed live: margin-left computed to 61.25px at a 1280px
+   viewport) — body .container's existing "full width" rule earlier in this
+   file sets width:90% but never touched those margins, so the box still
+   centers itself within that 90%, just with less margin than the
+   default 100%-width case. Scoped to .page-head.flex specifically (not
+   changed for .container generally) so list/form page bodies below keep
+   their existing centered look — this only affects the page-head row's own
+   horizontal position. */
+.page-head.flex .container {
+	width: 100% !important;
+	margin-left: 0 !important;
+	margin-right: 0 !important;
+}
+
 /* Declutter list and form views, across every doctype — these are all
    framework-level structural classes Frappe reuses for every doctype's list
    and form (not per-doctype markup), so one rule here covers all of them.
