@@ -371,6 +371,21 @@ body.navbar-extras-relocated .navbar {
 .page-actions .collapse.navbar-collapse {
 	display: flex !important;
 	align-items: center;
+	/* Bootstrap's own .navbar-collapse class carries flex-grow:1 and
+	   flex-basis:100% — confirmed live — intended to expand and fill the
+	   space between the brand logo and the right-aligned items within the
+	   full-width .navbar it originally lived in. Relocated into the much
+	   narrower .page-actions next to the "Add X" button, that same expansion
+	   stretched it across nearly all of .page-actions' remaining width,
+	   pushing its own content (search + avatar, right-aligned within ITS OWN
+	   box via justify-content:flex-end) far away from "Add X" even though
+	   the two are adjacent siblings with no actual gap between them in the
+	   DOM — confirmed live via getBoundingClientRect() that "Add X" ended at
+	   the exact same x the collapse began, before the collapse's own
+	   expansion carried its content another ~650px to the right. Sizing it
+	   to its own content instead lets it sit directly next to "Add X". */
+	flex-grow: 0 !important;
+	flex-basis: auto !important;
 }
 
 /* Same bug, one level deeper: Bootstrap's ul.navbar-nav (wrapping
