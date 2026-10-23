@@ -22,9 +22,21 @@ MODULES = [
 			# report named after the doctype. A plain string instead links to
 			# an existing Report by that exact name (its Report Builder/Query/
 			# Script type is read from the DB, not assumed here).
-			{"ref_doctype": "Employee Checkin", "label": "Employee Checkin"},
-			{"ref_doctype": "Attendance", "label": "Attendance"},
-			{"ref_doctype": "Leave Application", "label": "Leave Application"},
+			#
+			# label is "<Doctype> Report", not the bare doctype name: this
+			# Workspace's title IS that label (see ensure_report_workspace),
+			# and Workspace.validate()'s validate_route_conflict rejects
+			# inserting a brand-new Workspace whose title slug matches ANY
+			# existing DocType name — confirmed on pico.com's Frappe version,
+			# which (unlike this bench's) checks DocType names unconditionally
+			# with no self-doctype exemption, so even a workspace meant to
+			# represent "Attendance" can't be titled bare "Attendance" on
+			# first insert there. Sidestepped by using a title that's never
+			# going to collide with a real doctype name, instead of fighting
+			# that framework-level check.
+			{"ref_doctype": "Employee Checkin", "label": "Employee Checkin Report"},
+			{"ref_doctype": "Attendance", "label": "Attendance Report"},
+			{"ref_doctype": "Leave Application", "label": "Leave Application Report"},
 			{"report_name": "Employee Leave Balance", "label": "Leave Balance"},
 		],
 	},
@@ -54,8 +66,10 @@ MODULES = [
 			"Lead Source",
 		],
 		"reports": [
-			{"ref_doctype": "Customer", "label": "Customer"},
-			{"ref_doctype": "Lead", "label": "Lead"},
+			# See the comment on HR Module's "reports" above for why these are
+			# titled "<Doctype> Report" rather than the bare doctype name.
+			{"ref_doctype": "Customer", "label": "Customer Report"},
+			{"ref_doctype": "Lead", "label": "Lead Report"},
 		],
 	},
 	{

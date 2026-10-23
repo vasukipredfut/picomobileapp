@@ -503,19 +503,27 @@
 	// So these entries' real navigation is handled entirely by this file via
 	// a capture-phase click interceptor, keyed by the sidebar item's visible
 	// label text (each of these 6 labels is unique across the whole sidebar,
-	// so no parent-module disambiguation is needed).
+	// so no parent-module disambiguation is needed). label here must match
+	// setup_sidebar_menu.py's MODULES "reports" display label exactly — most
+	// are "<Doctype> Report", not the bare doctype name: pico.com's Frappe
+	// version rejects a first-time Workspace insert whose title slug matches
+	// any existing DocType name (confirmed live), so the underlying Workspace
+	// (and therefore the visible sidebar text, which is driven by the same
+	// title field) had to be named distinctly from the doctype itself. report
+	// stays the bare doctype name since that's still the real Report
+	// document's own name (ensure_report_builder_report never renamed that).
 	const REPORT_SIDEBAR_LINKS = [
-		{ label: "Employee Checkin", kind: "report-builder", doctype: "Employee Checkin", report: "Employee Checkin", companyField: null },
-		{ label: "Attendance", kind: "report-builder", doctype: "Attendance", report: "Attendance", companyField: "company" },
-		{ label: "Leave Application", kind: "report-builder", doctype: "Leave Application", report: "Leave Application", companyField: "company" },
+		{ label: "Employee Checkin Report", kind: "report-builder", doctype: "Employee Checkin", report: "Employee Checkin", companyField: null },
+		{ label: "Attendance Report", kind: "report-builder", doctype: "Attendance", report: "Attendance", companyField: "company" },
+		{ label: "Leave Application Report", kind: "report-builder", doctype: "Leave Application", report: "Leave Application", companyField: "company" },
 		{ label: "Leave Balance", kind: "query-report", report: "Employee Leave Balance", companyField: "company" },
 		// Customer has no companyField: confirmed reading customer.json — it
 		// carries no direct Link-to-Company field at all (only "companies", a
 		// multi-company "Allowed To Transact With" child table, and
 		// "represents_company" which only applies to internal customers), so
 		// there's no single field to pre-fill a company default into.
-		{ label: "Customer", kind: "report-builder", doctype: "Customer", report: "Customer", companyField: null },
-		{ label: "Lead", kind: "report-builder", doctype: "Lead", report: "Lead", companyField: "company" },
+		{ label: "Customer Report", kind: "report-builder", doctype: "Customer", report: "Customer", companyField: null },
+		{ label: "Lead Report", kind: "report-builder", doctype: "Lead", report: "Lead", companyField: "company" },
 	];
 
 	function routeForReportLink(cfg) {
