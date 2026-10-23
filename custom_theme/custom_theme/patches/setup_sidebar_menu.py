@@ -12,10 +12,7 @@ MODULES = [
 		"doctypes": [
 			"User",
 			"Employee",
-			"Employee Checkin",
-			"Attendance",
 			"Shift Type",
-			"Leave Application",
 			"Leave Allocation",
 			"Leave Type",
 			"Holiday List",
@@ -28,10 +25,6 @@ MODULES = [
 			"Salary Component",
 			"Salary Structure",
 			"Salary Structure Assignment",
-			# A dict here means "link to this real DocType, but show this
-			# shorter text in the sidebar" — the plain string entries link
-			# to a DocType of that exact name AND display that same name.
-			{"doctype": "Bulk Salary Structure Assignment", "label": "Bulk Sal.Struc Assignment"},
 			"Payroll Entry",
 			"Salary Slip",
 		],
@@ -50,7 +43,6 @@ MODULES = [
 		"doctypes": [
 			"Lead",
 			"Lead Source",
-			"Customer",
 		],
 	},
 	{
@@ -74,8 +66,33 @@ MODULES = [
 def execute():
 	for module in MODULES:
 		parent_name = ensure_parent_workspace(module["title"], module["icon"])
+		wanted_labels = set()
 		for idx, entry in enumerate(module["doctypes"]):
+			doctype, _ = normalize_doctype_entry(entry)
+			wanted_labels.add(f"{module['title']} - {doctype}")
 			ensure_doctype_workspace(parent_name, module["title"], entry, idx)
+		remove_stale_doctype_workspaces(module["title"], wanted_labels)
+
+
+def remove_stale_doctype_workspaces(module_title, wanted_labels):
+	# ensure_doctype_workspace() only ever upserts entries still present in
+	# MODULES — it has no way to notice an entry that used to be there and
+	# got deleted from this file, so a prior run's Workspace row for it would
+	# otherwise dangle in the sidebar forever. Deleted outright (not just
+	# is_hidden=1) because is_hidden is silently ignored for any user with
+	# the Workspace Manager role (see get_workspace_sidebar_items() in
+	# frappe/desk/desktop.py: "page.public and (has_access or not
+	# page.is_hidden)") — an Administrator-role account has has_access=True
+	# there, so it would still see an is_hidden workspace, making a "remove
+	# this from the sidebar" request look unfixed to whoever tests as admin.
+	# Safe to delete rather than hide: each of these child workspaces is
+	# nothing but a single shortcut tile (see ensure_doctype_workspace) with
+	# no content of its own, fully reconstructed from MODULES by re-running
+	# this patch if a removed entry is ever wanted back.
+	existing = frappe.get_all("Workspace", filters={"parent_page": module_title}, pluck="name")
+	for name in existing:
+		if name not in wanted_labels:
+			frappe.delete_doc("Workspace", name, ignore_permissions=True, force=True)
 
 
 def normalize_doctype_entry(entry):
