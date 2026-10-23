@@ -356,6 +356,15 @@ li.nav-item:has(> [data-fieldname="connections_tab"]) {
 	display: none !important;
 }
 
+/* Salary Structure's form-only custom buttons ("Create" dropdown and
+   "Actions" dropdown), added by Salary Structure's own client script, not a
+   generic Frappe feature. Scoped to this one doctype's Form page
+   specifically, same pattern as Shift Type/User/Leave Allocation/Salary
+   Component above. */
+.page-container[data-page-route="Salary Structure"] .custom-actions {
+	display: none !important;
+}
+
 /* The "..." menu button itself, removed outright for every doctype's form
    (superseding the earlier Reload/Delete allowlist further up this file —
    that rule is now moot since its parent is hidden here, but left in place

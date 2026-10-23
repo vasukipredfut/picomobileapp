@@ -454,6 +454,39 @@
 		}, 100);
 	}
 
+	function watchForInPlaceRefresh() {
+		// frappe.router.on("change") alone misses any refresh that doesn't
+		// change the route — confirmed live: cur_frm.savesubmit() (and
+		// reload_doc()) rebuild the form's DOM in place, including wiping out
+		// and recreating .form-sidebar's children, with no route change at
+		// all, silently dropping our injected module tree until the user
+		// manually reloads the page. frappe.ui.form.on("*", {refresh: ...})
+		// looks like the obvious hook but does NOT fire in this Frappe
+		// version — confirmed live: a doctype-specific registration (e.g.
+		// "Salary Structure") fires fine, but "*" never does, and hardcoding
+		// every doctype isn't viable. A MutationObserver sidesteps guessing
+		// the triggering event entirely: it reacts to the DOM actually
+		// changing, whatever caused it (submit, reload_doc, cancel, amend,
+		// future Frappe versions, ...), so it stays correct even if Frappe's
+		// internal event wiring changes again.
+		//
+		// Debounced rather than re-running on every mutation record: a form
+		// rebuild fires many childList mutations in a single burst, and
+		// relocateLogo()/relocateNavbarExtras() each start their own ~10s
+		// poll loop per call — collapsing a burst into one trailing call
+		// avoids stacking dozens of redundant poll loops.
+		let debounceTimer = null;
+		const observer = new MutationObserver(function () {
+			if (debounceTimer) clearTimeout(debounceTimer);
+			debounceTimer = setTimeout(function () {
+				relocateLogo();
+				relocateNavbarExtras();
+				injectModuleTreeSidebar();
+			}, 150);
+		});
+		observer.observe(document.body, { childList: true, subtree: true });
+	}
+
 	function apply() {
 		ensureWorkspaceSidebarExists();
 		relocateLogo();
@@ -464,6 +497,7 @@
 			relocateNavbarExtras();
 			injectModuleTreeSidebar();
 		});
+		watchForInPlaceRefresh();
 
 		const pref = frappe.boot && frappe.boot.custom_theme_preference;
 		if (!pref) return;
