@@ -79,21 +79,37 @@ MODULES = [
 def execute():
 	for module in MODULES:
 		parent_name = ensure_parent_workspace(module["title"], module["icon"])
+		report_entries = module.get("reports", [])
+
+		# Computed up front and cleaned up BEFORE any ensure_*_workspace() call
+		# below — not after, as this used to do. A report entry can reuse the
+		# exact display title of a doctype entry it's replacing (e.g. Lead's
+		# plain list link replaced by a Lead report, both titled "Lead"), and
+		# Workspace.validate() rejects creating a new workspace whose title
+		# collides with an EXISTING workspace's route (validate_route_conflict)
+		# regardless of internal name. Running cleanup only at the end meant
+		# a site that had never run the reports-less version of this patch in
+		# between (confirmed live on a production site that jumped straight
+		# from the old MODULES list to this one) would still have the OLD
+		# "HR Module - Attendance" (title "Attendance") sitting there when
+		# ensure_report_workspace() tried to insert a NEW workspace also
+		# titled "Attendance" for the report — a route conflict, NameError,
+		# raised before cleanup ever ran.
 		wanted_labels = set()
-		for idx, entry in enumerate(module["doctypes"]):
+		for entry in module["doctypes"]:
 			doctype, _ = normalize_doctype_entry(entry)
 			wanted_labels.add(f"{module['title']} - {doctype}")
+		for entry in report_entries:
+			report_key = entry.get("ref_doctype") or entry["report_name"]
+			wanted_labels.add(f"{module['title']} - {report_key} Report")
+		remove_stale_doctype_workspaces(module["title"], wanted_labels)
+
+		for idx, entry in enumerate(module["doctypes"]):
 			ensure_doctype_workspace(parent_name, module["title"], entry, idx)
 
-		report_entries = module.get("reports", [])
 		doctype_count = len(module["doctypes"])
 		for idx, entry in enumerate(report_entries):
-			report_key = entry.get("ref_doctype") or entry["report_name"]
-			internal_label = f"{module['title']} - {report_key} Report"
-			wanted_labels.add(internal_label)
 			ensure_report_workspace(parent_name, module["title"], entry, doctype_count + idx)
-
-		remove_stale_doctype_workspaces(module["title"], wanted_labels)
 
 
 def remove_stale_doctype_workspaces(module_title, wanted_labels):
