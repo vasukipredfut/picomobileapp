@@ -386,6 +386,10 @@ body.navbar-extras-relocated .navbar {
 	   to its own content instead lets it sit directly next to "Add X". */
 	flex-grow: 0 !important;
 	flex-basis: auto !important;
+	/* Fixing the expansion above left "Add X" and the avatar touching with a
+	   literal 0px gap (confirmed live) — a small margin so they read as two
+	   distinct controls instead of visually merging into one. */
+	margin-left: 12px;
 }
 
 /* Same bug, one level deeper: Bootstrap's ul.navbar-nav (wrapping
