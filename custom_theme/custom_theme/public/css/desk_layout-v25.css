@@ -330,6 +330,28 @@ li.nav-item:has(> [data-fieldname="connections_tab"]) {
 	display: none !important;
 }
 
+/* User's form-only custom buttons ("Permissions" dropdown — Set User
+   Permissions / View Permitted Documents — and "Password"), added by
+   User's own client script, not a generic Frappe feature. Scoped to this
+   one doctype's Form page specifically, same reasoning and pattern as
+   Shift Type above — removing a specific doctype's own custom buttons, not
+   every doctype's. */
+.page-container[data-page-route="User"] .custom-actions {
+	display: none !important;
+}
+
+/* The "..." menu button itself, removed outright for every doctype's form
+   (superseding the earlier Reload/Delete allowlist further up this file —
+   that rule is now moot since its parent is hidden here, but left in place
+   rather than deleted in case a future request brings the menu back and
+   only wants it trimmed again). List views already lose this via the
+   broader ":has(.custom-btn-group) .menu-btn-group" rule above; this
+   extends the same removal to Form views and the Workspace/Home Dashboard
+   page, which that list-only rule doesn't reach. */
+.menu-btn-group {
+	display: none !important;
+}
+
 /* Merge the navbar + page-head bars into one visible layer. JS
    (apply_theme_preference-v20.js's relocateNavbarExtras) physically moves
    the real search bar / notifications / avatar dropdown element out of
