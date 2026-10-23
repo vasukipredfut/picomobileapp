@@ -255,6 +255,105 @@
 		});
 	}
 
+	function buildFallbackModuleTree() {
+		// ensureWorkspaceSidebarExists()'s pre-warm is best-effort, not
+		// guaranteed — confirmed live it can throw inside Frappe's own
+		// Workspace constructor on a cold load (a Frappe-internal issue
+		// unrelated to this app), leaving .desk-sidebar never created at all
+		// for the rest of that session. When that happens there's nothing to
+		// clone, which is what left the sidebar empty ("instead I want left
+		// bar menu always in all doctypes").
+		//
+		// frappe.boot.allowed_workspaces is the same data Frappe's own
+		// Workspace class uses to build .desk-sidebar (confirmed live: each
+		// entry has name/title/public/parent_page/icon/is_hidden, exactly
+		// what sidebar_item_container()/append_item() in workspace.js consume)
+		// — it's core bootinfo, always present, so building our own minimal
+		// equivalent directly from it never depends on the fragile
+		// constructor. This intentionally only covers public pages and skips
+		// auto-expanding/highlighting the current page's section (the real
+		// sidebar's selected-state logic) — a reliable plain tree beats a
+		// richer one that can silently fail to appear at all.
+		const pages = (frappe.boot && frappe.boot.allowed_workspaces) || [];
+		const publicPages = pages.filter((p) => p.public && !p.is_hidden);
+		if (!publicPages.length) return null;
+
+		function childrenOf(title) {
+			return publicPages.filter((p) => p.parent_page === title);
+		}
+
+		function renderItem(item) {
+			const children = childrenOf(item.title);
+			const container = document.createElement("div");
+			container.className = "sidebar-item-container";
+			container.setAttribute("item-name", item.title);
+
+			const standardItem = document.createElement("div");
+			standardItem.className = "desk-sidebar-item standard-sidebar-item";
+			container.appendChild(standardItem);
+
+			const anchor = document.createElement("a");
+			anchor.className = "item-anchor";
+			anchor.href = "/app/" + frappe.router.slug(item.title);
+			anchor.title = item.title;
+			standardItem.appendChild(anchor);
+
+			const iconSpan = document.createElement("span");
+			iconSpan.className = "sidebar-item-icon";
+			iconSpan.setAttribute("item-icon", item.icon || "folder-normal");
+			iconSpan.innerHTML =
+				'<svg class="icon icon-md" aria-hidden="true"><use href="#icon-' +
+				(item.icon || "folder-normal") +
+				'"></use></svg>';
+			anchor.appendChild(iconSpan);
+
+			const labelSpan = document.createElement("span");
+			labelSpan.className = "sidebar-item-label";
+			labelSpan.textContent = item.title;
+			anchor.appendChild(labelSpan);
+
+			const control = document.createElement("div");
+			control.className = "sidebar-item-control";
+			standardItem.appendChild(control);
+
+			if (children.length) {
+				const dropIcon = document.createElement("button");
+				dropIcon.className = "btn-reset drop-icon";
+				dropIcon.innerHTML =
+					'<svg class="es-icon es-line icon-sm" aria-hidden="true"><use href="#es-line-down"></use></svg>';
+				control.appendChild(dropIcon);
+
+				const childSection = document.createElement("div");
+				childSection.className = "sidebar-child-item nested-container hidden";
+				children.forEach((child) => childSection.appendChild(renderItem(child)));
+				container.appendChild(childSection);
+			}
+
+			return container;
+		}
+
+		const tree = document.createElement("div");
+		// Also carries .custom-theme-module-tree-clone (not just
+		// .custom-theme-fallback-tree) so it automatically inherits every CSS
+		// fix already written for the cloned tree — most importantly
+		// ".custom-theme-module-tree-clone .item-anchor { display: flex }",
+		// without which icon+label would stack vertically here exactly like
+		// the original clone did before that fix (same underlying cause:
+		// Frappe's own flex-row rule for .item-anchor only applies within a
+		// real Workspace page's wrapper, which neither this tree nor the
+		// clone has).
+		tree.className =
+			"desk-sidebar list-unstyled sidebar-menu custom-theme-fallback-tree custom-theme-module-tree-clone";
+		const section = document.createElement("div");
+		section.className = "standard-sidebar-section nested-container";
+		tree.appendChild(section);
+		publicPages
+			.filter((p) => !p.parent_page)
+			.forEach((root) => section.appendChild(renderItem(root)));
+
+		return tree;
+	}
+
 	function injectModuleTreeSidebar() {
 		// List and form views replace the usual module-tree sidebar
 		// (.desk-sidebar) with their own .list-sidebar/.form-sidebar in the
@@ -285,11 +384,17 @@
 		// children exist in the DOM even while collapsed) — there's just no
 		// listener left to toggle that class. addClonedSidebarToggleHandler()
 		// below replaces it with our own.
+		function alreadyInjected(sidebar) {
+			return !!sidebar.querySelector(
+				".desk-sidebar, .custom-theme-module-tree-clone, .custom-theme-fallback-tree"
+			);
+		}
+
 		function tryInject() {
 			const activeContainer = getActivePageContainer();
 			const sidebar = activeContainer && activeContainer.querySelector(".list-sidebar, .form-sidebar");
 			if (!sidebar) return false;
-			if (sidebar.querySelector(".desk-sidebar")) return true; // real Workspace page
+			if (alreadyInjected(sidebar)) return true;
 			const original = document.querySelector(".desk-sidebar");
 			// ensureWorkspaceSidebarExists() creates .desk-sidebar's skeleton
 			// synchronously but populates its items asynchronously (fetched from
@@ -317,12 +422,35 @@
 		let tries = 0;
 		const iv = setInterval(function () {
 			tries += 1;
-			// Form views fetch the full document over the network before
-			// rendering — confirmed live that a 2s budget (20 tries) was too
-			// short and silently gave up before .form-sidebar even existed.
-			// 100 tries (~10s) matches the budget already used for the outer
-			// frappe.boot wait.
-			if (tryInject() || tries > 100) clearInterval(iv);
+			if (tryInject()) {
+				clearInterval(iv);
+				return;
+			}
+			// ensureWorkspaceSidebarExists()'s pre-warm is best-effort — confirmed
+			// live it can throw inside Frappe's own Workspace constructor on a
+			// cold load, in which case .desk-sidebar never becomes available NO
+			// MATTER how long this keeps polling ("I want left bar menu always
+			// in all doctypes" — confirmed live this is exactly the gap: the
+			// sidebar stayed empty with nothing to clone). 20 tries (~2s) is
+			// enough budget for the NORMAL success case (confirmed live that
+			// typically resolves within 1-2 ticks once the async workspace
+			// fetch completes) without leaving a real failure staring at an
+			// empty sidebar for the full 10s budget used elsewhere in this
+			// file. Falling back to a tree built straight from boot data — not
+			// dependent on the fragile constructor at all — instead of giving
+			// up.
+			if (tries > 20) {
+				clearInterval(iv);
+				const activeContainer = getActivePageContainer();
+				const sidebar = activeContainer && activeContainer.querySelector(".list-sidebar, .form-sidebar");
+				if (sidebar && !alreadyInjected(sidebar)) {
+					const fallback = buildFallbackModuleTree();
+					if (fallback) {
+						addClonedSidebarToggleHandler(fallback);
+						sidebar.insertBefore(fallback, sidebar.firstChild);
+					}
+				}
+			}
 		}, 100);
 	}
 

@@ -27,17 +27,17 @@ app_license = "mit"
 # include js, css files in header of desk.html
 app_include_css = [
 	"/assets/custom_theme/css/company_branding-v2.css",
-	"/assets/custom_theme/css/desk_layout-v26.css",
+	"/assets/custom_theme/css/desk_layout-v27.css",
 	"/assets/custom_theme/css/theme_preference-v2.css",
 ]
 app_include_js = [
-	"/assets/custom_theme/js/apply_theme_preference-v21.js",
+	"/assets/custom_theme/js/apply_theme_preference-v22.js",
 ]
 
 # include js, css files in header of web template
 web_include_css = [
 	"/assets/custom_theme/css/company_branding-v2.css",
-	"/assets/custom_theme/css/desk_layout-v26.css",
+	"/assets/custom_theme/css/desk_layout-v27.css",
 ]
 # web_include_js = "/assets/custom_theme/js/custom_theme.js"
 

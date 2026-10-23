@@ -105,15 +105,14 @@ body .container {
 	object-fit: contain;
 }
 
-/* Hide the page title text ("Home Dashboard", etc.) next to the relocated
-   logo + sidebar-toggle button — the row should show just those two,
-   matching the reference layout, not the current page's name. .title-area
-   is the wrapper Frappe's page.html uses for the title text, the
-   indicator pill next to it, and the "more" overflow button; hiding the
-   whole wrapper removes all three together. */
-.page-title .title-area {
-	display: none !important;
-}
+/* Page title text next to the relocated logo + sidebar-toggle button was
+   hidden here for a while (per an earlier request to match a different
+   reference layout), then explicitly asked back: "show the name of
+   doctype/document name in top bar" — on a document this is the record
+   name (e.g. "Basic"), on a list it's the doctype name (e.g. "Salary
+   Component"), both driven by the same .title-area wrapper Frappe's
+   page.html already uses for every page type, so no extra work is needed
+   beyond no longer hiding it. */
 
 /* Flush the logo + sidebar-toggle button to the true left edge of the page
    head bar, matching the reference layout, instead of sitting ~80px in.
@@ -345,6 +344,15 @@ li.nav-item:has(> [data-fieldname="connections_tab"]) {
    Frappe feature. Scoped to this one doctype's Form page specifically, same
    reasoning and pattern as Shift Type/User above. */
 .page-container[data-page-route="Leave Allocation"] .custom-actions {
+	display: none !important;
+}
+
+/* Salary Component's form-only custom buttons ("Create" dropdown and
+   "Update Salary Structures"), added by Salary Component's own client
+   script, not a generic Frappe feature. Scoped to this one doctype's Form
+   page specifically, same pattern as Shift Type/User/Leave Allocation
+   above. */
+.page-container[data-page-route="Salary Component"] .custom-actions {
 	display: none !important;
 }
 
