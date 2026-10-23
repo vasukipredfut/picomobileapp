@@ -24,9 +24,17 @@ body .container {
 
 /* Hide the notification bell and Help dropdown from the desk navbar.
    .dropdown-notifications and .dropdown-help are the exact <li> wrapper
-   classes Frappe's own navbar.html uses for these two items. */
-.navbar .dropdown-notifications,
-.navbar .dropdown-help {
+   classes Frappe's own navbar.html uses for these two items.
+   NOT scoped to a ".navbar" ancestor (confirmed live this reappeared once
+   relocateNavbarExtras() moved their containing .collapse.navbar-collapse
+   out of .navbar into .page-actions — same mistake, yet again, as every
+   other ancestor-scoped selector broken by a relocation in this file: once
+   moved, the element is no longer a descendant of .navbar at all, so an
+   ancestor-scoped rule silently stops matching instead of erroring).
+   Matching the classes directly is safe — they're specific enough that
+   nothing else in the app uses them. */
+.dropdown-notifications,
+.dropdown-help {
 	display: none !important;
 }
 
@@ -362,6 +370,26 @@ body.navbar-extras-relocated .navbar {
    .navbar-scoped rule. */
 .page-actions .collapse.navbar-collapse {
 	display: flex !important;
+	align-items: center;
+}
+
+/* Same bug, one level deeper: Bootstrap's ul.navbar-nav (wrapping
+   notifications + Help + the avatar dropdown as <li>s) only lays out
+   horizontally via ".navbar-expand .navbar-nav { flex-direction: row }" —
+   scoped to a ".navbar-expand" ancestor (the actual class on .navbar: "navbar
+   navbar-expand"). Confirmed live: once relocated outside .navbar entirely,
+   that ancestor is gone, so .navbar-nav fell back to Bootstrap's base
+   .navbar-nav { flex-direction: column }, stacking notifications/Help/avatar
+   vertically instead of side by side. That stack grew taller (70px) than the
+   60px page-head bar itself, which is why the avatar rendered mostly below
+   the visible bar (clipped out of view) even though .dropdown-navbar-user
+   itself wasn't display:none, and why the logo/hamburger looked vertically
+   off-center — the row's height was being driven by this oversized stacked
+   column, not by the page-head bar's actual height. */
+.page-actions ul.navbar-nav {
+	display: flex !important;
+	flex-direction: row !important;
+	align-items: center;
 }
 
 /* .page-head.flex is "position: sticky; top: var(--navbar-height)" (48px)
