@@ -511,12 +511,15 @@
 	// (and therefore the visible sidebar text, which is driven by the same
 	// title field) had to be named distinctly from the doctype itself.
 	// "report" is each entry's REAL underlying Report name — distinct from
-	// "label" (the sidebar's visible text) for the two reused vendor reports,
-	// since "Shift Attendance"/"Lead Details" are what they're actually
-	// called, not "Attendance Report"/"Lead Report". Every entry is a real
-	// Script/Query Report, routed at query-report/<name> — no more "Report
-	// Builder" (a saved list view), which looked too similar to the plain
-	// doctype list it was replacing, per explicit feedback.
+	// "label" (the sidebar's visible text) for the one still-reused vendor
+	// report, since "Shift Attendance" is what it's actually called, not
+	// "Attendance Report". Every entry is a real Script/Query Report, routed
+	// at query-report/<name> — no more "Report Builder" (a saved list view),
+	// which looked too similar to the plain doctype list it was replacing,
+	// per explicit feedback. "Lead Report" is custom_theme's own fork of
+	// erpnext's "Lead Details" (dropped Territory/Source/Postal Code columns
+	// and the Status/Territory filters per a later request), not the vendor
+	// report itself anymore.
 	const REPORT_SIDEBAR_LINKS = [
 		{ label: "Employee Checkin Report", report: "Employee Checkin Report", companyField: "company" },
 		{ label: "Attendance Report", report: "Shift Attendance", companyField: "company" },
@@ -529,7 +532,7 @@
 		// there's no single field to pre-fill a company default into. Our own
 		// Customer Report's filters reflect this (no company filter at all).
 		{ label: "Customer Report", report: "Customer Report", companyField: null },
-		{ label: "Lead Report", report: "Lead Details", companyField: "company" },
+		{ label: "Lead Report", report: "Lead Report", companyField: "company" },
 	];
 
 	function routeForReportLink(cfg) {

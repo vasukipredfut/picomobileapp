@@ -72,11 +72,13 @@ MODULES = [
 		"reports": [
 			# See the comment on HR Module's "reports" above for why these are
 			# titled "<Doctype> Report" rather than the bare doctype name.
-			# "Customer Report" is custom_theme's own
-			# (custom_theme/custom_theme/report/...); "Lead Details" is
-			# erpnext's own built-in report, reused as-is.
+			# Both "Customer Report" and "Lead Report" are custom_theme's own
+			# (custom_theme/custom_theme/report/...). Lead originally reused
+			# erpnext's "Lead Details" as-is, but was forked into our own
+			# trimmed version per request: dropped the Territory/Source/
+			# Postal Code columns and the Status/Territory filters.
 			{"report_name": "Customer Report", "label": "Customer Report"},
-			{"report_name": "Lead Details", "label": "Lead Report"},
+			{"report_name": "Lead Report", "label": "Lead Report"},
 		],
 	},
 	{
@@ -247,9 +249,9 @@ def ensure_report_workspace(parent_name, module_title, entry, idx):
 	Report instead of a plain DocType list. entry is {"report_name": ...,
 	"label": ...}, linking to an ALREADY-EXISTING Report — either one of
 	custom_theme's own (custom_theme/custom_theme/report/...) or a built-in
-	one from erpnext/hrms (e.g. "Shift Attendance", "Lead Details",
-	"Employee Leave Balance") — reused as-is rather than duplicating its
-	query/column logic. Never creates a Report Builder (= a saved list view)
+	one from erpnext/hrms (e.g. "Shift Attendance", "Employee Leave
+	Balance") — reused as-is rather than duplicating its query/column
+	logic. Never creates a Report Builder (= a saved list view)
 	here: that looked too similar to the plain doctype list it was meant to
 	replace, so every entry now points to a real Script/Query Report with
 	its own purpose-built filters and computed columns.
